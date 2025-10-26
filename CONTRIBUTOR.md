@@ -10,7 +10,7 @@ The skeletons need to be compatible with the the web applicatoin. There are pre-
 
 1. Download the 3d Blender rig file you want to help with
 - [Bird Rig](https://github.com/scottpetrovic/mesh2motion-app/blob/main/static/blender/rigs/bird/rig-bird-v2.blend)
-- [Human Rig](https://github.com/scottpetrovic/mesh2motion-app/blob/main/static/blender/rigs/human/rig-human.blend)
+- [Human Rig](https://github.com/scottpetrovic/mesh2motion-app/blob/main/static/blender/rigs/human/rig-human-v2.blend)
 - [Dragon Rig](https://github.com/scottpetrovic/mesh2motion-app/blob/main/static/blender/rigs/dragon/rig-dragon-v2.blend)
 - [Fox Rig](https://github.com/scottpetrovic/mesh2motion-app/blob/main/static/blender/rigs/fox/rig-fox-v2.blend)
 2. Create a new Blender file and delete all the objects (meshes, camera, lights) that exist in the scene
