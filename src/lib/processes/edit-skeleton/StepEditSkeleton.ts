@@ -282,7 +282,7 @@ export class StepEditSkeleton extends EventTarget {
       
       // Update the label to show current value
       if (this.ui.dom_preview_plane_height_label !== null) {
-        this.ui.dom_preview_plane_height_label.textContent = final_height.toFixed(1)
+        this.ui.dom_preview_plane_height_label.textContent = final_height.toFixed(2)
       }
     })
   }

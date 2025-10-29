@@ -1,4 +1,4 @@
-import { Group, Mesh, PlaneGeometry, MeshBasicMaterial, type Scene, DoubleSide } from 'three'
+import { Group, Mesh, PlaneGeometry, MeshBasicMaterial, type Scene, DoubleSide, GridHelper } from 'three'
 
 /**
  * PreviewPlaneManager - Singleton class for managing a preview 3D plane in the edit skeleton step
@@ -12,6 +12,7 @@ export class PreviewPlaneManager {
   private scene_ref: Scene | null = null
   private plane_group: Group | null = null
   private plane_mesh: Mesh | null = null
+  private grid_helper: GridHelper | null = null
   private current_height: number = 0.0
   private current_size: number = 2.0
   private is_visible: boolean = false
@@ -59,7 +60,7 @@ export class PreviewPlaneManager {
     this.plane_group = new Group()
     this.plane_group.name = this.preview_plane_group_name
 
-    // Create plane geometry and material
+    // Create solid plane geometry and material
     const geometry = new PlaneGeometry(size, size)
     const material = new MeshBasicMaterial({
       color: 0x00ff00, // Green color for visibility
@@ -69,7 +70,7 @@ export class PreviewPlaneManager {
       wireframe: false
     })
 
-    // Create the plane mesh
+    // Create the solid plane mesh
     this.plane_mesh = new Mesh(geometry, material)
     this.plane_mesh.name = 'preview_plane'
     
@@ -79,9 +80,20 @@ export class PreviewPlaneManager {
     // Rotate the plane to be horizontal (lying flat)
     this.plane_mesh.rotation.x = -Math.PI / 2
 
-    // Add plane to the group and group to scene
+    // Create grid helper for rectangular grid lines
+    const grid_divisions = 15 // Number of divisions
+    this.grid_helper = new GridHelper(size, grid_divisions, 0x888888, 0x888888) // Gray grid
+    this.grid_helper.name = 'preview_plane_grid'
+    
+    // Position the grid at the specified height (GridHelper is already horizontal)
+    this.grid_helper.position.set(0, height, 0)
+
+    // Add both the plane and grid to the group and group to scene
     this.plane_group.add(this.plane_mesh)
-    this.scene_ref.add(this.plane_group)
+    this.plane_group.add(this.grid_helper)
+
+    // main scene to add to
+    this.scene_ref.add(this.plane_group) 
 
     return this.plane_mesh
   }
@@ -91,8 +103,9 @@ export class PreviewPlaneManager {
    * @param height The new height position for the plane
    */
   public update_height (height: number): void {
-    if (this.plane_mesh !== null && this.is_visible) {
+    if (this.plane_mesh !== null && this.grid_helper !== null && this.is_visible) {
       this.plane_mesh.position.y = height
+      this.grid_helper.position.y = height // Grid and plane at same height since no z-fighting
       this.current_height = height
     }
   }
@@ -102,11 +115,23 @@ export class PreviewPlaneManager {
    * @param size The new size for the plane
    */
   public update_size (size: number): void {
-    if (this.plane_mesh !== null && this.is_visible) {
-      // Update the geometry with new size
+    if (this.plane_mesh !== null && this.grid_helper !== null && this.is_visible) {
+      // Update the solid plane geometry
       const new_geometry = new PlaneGeometry(size, size)
       this.plane_mesh.geometry.dispose() // Clean up old geometry
       this.plane_mesh.geometry = new_geometry
+      
+      // For GridHelper, we need to recreate it with new size
+      const current_height = this.grid_helper.position.y
+      this.plane_group?.remove(this.grid_helper)
+      this.grid_helper.dispose() // Clean up old grid
+      
+      const grid_divisions = 10
+      this.grid_helper = new GridHelper(size, grid_divisions, 0x888888, 0x888888)
+      this.grid_helper.name = 'preview_plane_grid'
+      this.grid_helper.position.set(0, current_height, 0)
+      this.plane_group?.add(this.grid_helper)
+      
       this.current_size = size
     }
   }
@@ -154,7 +179,7 @@ export class PreviewPlaneManager {
    */
   public remove_plane (): void {
     if (this.plane_group !== null && this.scene_ref !== null) {
-      // Clean up geometry and material before removing
+      // Clean up solid plane geometry and material
       if (this.plane_mesh !== null) {
         this.plane_mesh.geometry.dispose()
         if (this.plane_mesh.material instanceof MeshBasicMaterial) {
@@ -162,9 +187,15 @@ export class PreviewPlaneManager {
         }
       }
       
+      // Clean up grid helper
+      if (this.grid_helper !== null) {
+        this.grid_helper.dispose()
+      }
+      
       this.scene_ref.remove(this.plane_group)
       this.plane_group = null
       this.plane_mesh = null
+      this.grid_helper = null
       this.is_visible = false
     }
   }
@@ -176,7 +207,7 @@ export class PreviewPlaneManager {
     this.remove_plane()
     this.scene_ref = null
     this.current_height = 0.0
-    this.current_size = 5.0
+    this.current_size = 2.0
     this.is_visible = false
   }
 }
