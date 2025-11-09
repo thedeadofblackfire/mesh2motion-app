@@ -160,6 +160,7 @@ export class AnimationUtility {
     })
 
     this.apply_center_bone_mirroring(animation_clips)
+    this.apply_hips_position_mirroring(animation_clips)
   }
 
   /**
@@ -195,7 +196,7 @@ export class AnimationUtility {
   }
 
   /**
-   * Mirrors center bone rotations by inverting Y and Z quaternion components.
+   * Mirrors center bone rotations and hips position by inverting specific components.
    * This handles bones like spine, hips, neck, head that don't have L/R pairs.
    */
   private static apply_center_bone_mirroring (animation_clips: TransformedAnimationClipPair[]): void {
@@ -203,19 +204,19 @@ export class AnimationUtility {
       const tracks = warped_clip.display_animation_clip.tracks
 
       tracks.forEach((track: KeyframeTrack) => {
-        if (!track.name.includes('quaternion')) {
-          return
-        }
-
         const track_name_lower = track.name.toLowerCase()
-        const is_center_bone = track_name_lower.includes('spine') ||
-                              track_name_lower.includes('hips') ||
-                              track_name_lower.includes('neck') ||
-                              track_name_lower.includes('head') ||
-                              track_name_lower.includes('torso') ||
-                              track_name_lower.includes('chest')
 
-        if (is_center_bone) {
+        // Handle quaternion tracks for center bones
+        if (track.name.includes('quaternion')) {
+          const is_center_bone = track_name_lower.includes('spine') ||
+                                track_name_lower.includes('hips') ||
+                                track_name_lower.includes('neck') ||
+                                track_name_lower.includes('head') ||
+                                track_name_lower.includes('torso') ||
+                                track_name_lower.includes('chest')
+
+          if (!is_center_bone) { return } // mirror rotations for center aligned bones
+
           const values = track.values
           const units_in_quaternions = 4
 
@@ -238,6 +239,36 @@ export class AnimationUtility {
             values[i + 1] = quat.y
             values[i + 2] = quat.z
             values[i + 3] = quat.w
+          }
+        }
+      })
+    })
+  }
+
+  /**
+   * Mirrors hips position tracks by inverting the X component.
+   * This handles the hips bone position for locomotion and falling animations.
+   */
+  private static apply_hips_position_mirroring (animation_clips: TransformedAnimationClipPair[]): void {
+    animation_clips.forEach((warped_clip: TransformedAnimationClipPair) => {
+      const tracks = warped_clip.display_animation_clip.tracks
+
+      tracks.forEach((track: KeyframeTrack) => {
+        const track_name_lower = track.name.toLowerCase()
+
+        // Handle position tracks specifically for hips
+        if (track.name.includes('position') && track_name_lower.includes('hips')) {
+          const values = track.values
+          const units_in_position = 3 // x, y, z
+
+          // Process each position keyframe
+          for (let i = 0; i < values.length; i += units_in_position) {
+            // For mirroring hips position, we need to invert the X component
+            // This creates the mirror effect for hips movement (left/right movement)
+            // Y (up/down) and Z (forward/back) remain unchanged
+            values[i] = -values[i] // invert X position
+            // values[i + 1] unchanged (Y - up/down)
+            // values[i + 2] unchanged (Z - forward/back)
           }
         }
       })
