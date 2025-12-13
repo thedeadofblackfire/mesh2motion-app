@@ -1,0 +1,17 @@
+h1 {
+    font-size: 1.5rem;
+}
+
+.bone-map-section {
+    display: inline-flex; 
+    flex-direction: column;
+    border: 1px solid var(--bg-tertiary);
+    padding: 1rem;
+}
+
+#source-bones-list, #target-bones-list {
+    max-height: calc(100vh - 400px);
+    overflow-y: auto;
+    background-color: var(--bg-alternate);
+    border-radius: 0.25rem;
+}

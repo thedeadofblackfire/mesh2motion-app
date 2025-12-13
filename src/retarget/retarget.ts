@@ -9,7 +9,6 @@ class RetargetModule {
   private readonly mesh2motion_engine: Mesh2MotionEngine
   private fileInput: HTMLInputElement | null = null
   private load_model_button: HTMLLabelElement | null = null
-  private bone_map_button: HTMLButtonElement | null = null
   private readonly step_load_target_skeleton: StepLoadTargetSkeleton
   private readonly step_bone_mapping: StepBoneMapping
 
@@ -29,13 +28,13 @@ class RetargetModule {
   public init (): void {
     this.add_event_listeners()
     this.step_load_target_skeleton.begin()
+    this.step_bone_mapping.begin()
   }
 
   public add_event_listeners (): void {
     // Get DOM elements
     this.fileInput = document.getElementById('upload-file') as HTMLInputElement
     this.load_model_button = document.getElementById('load-model-button') as HTMLLabelElement
-    this.bone_map_button = document.getElementById('bone-map-button') as HTMLButtonElement
 
     // Add event listener for file selection
     this.fileInput.addEventListener('change', (event) => {
@@ -48,11 +47,6 @@ class RetargetModule {
       const target_armature = this.step_load_target_skeleton.get_loaded_target_armature()
       const skeleton_type = this.step_load_target_skeleton.get_skeleton_type()
       this.step_bone_mapping.set_target_skeleton_data(target_armature, skeleton_type)
-    })
-    
-    // Bone map button click listener
-    this.bone_map_button?.addEventListener('click', () => {
-      this.handle_bone_map_requested()
     })
   }
 
@@ -120,15 +114,6 @@ class RetargetModule {
       }
     })
   }
-
-  private handle_bone_map_requested (): void {
-    console.log('Bone map requested - proceeding to bone mapping step')
-    console.log('Target skeleton type:', this.step_load_target_skeleton.get_skeleton_type())
-    console.log('Target armature:', this.step_load_target_skeleton.get_loaded_target_armature())
-    
-    // Begin the bone mapping step
-    this.step_bone_mapping.begin()
-  }
 }
 
 // Initialize when DOM is ready
@@ -137,4 +122,5 @@ document.addEventListener('DOMContentLoaded', () => {
 })
 
 const retarget_app = new RetargetModule()
+
 

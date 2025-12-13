@@ -8,7 +8,7 @@
 
         <!-- Stylesheets-->
         <link href="../styles.css" rel="stylesheet" crossorigin="anonymous" />
-        <link rel="stylesheet" href="./retarget/retarget.css" crossorigin="anonymous" />
+        <link rel="stylesheet" href="./retarget.css" crossorigin="anonymous" />
 
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
         <link rel="stylesheet" href="../dialog.css" crossorigin="anonymous" />
@@ -37,44 +37,47 @@
             </button>
         </div>
     </nav>
-        
-        <div style="padding: 2rem;">
-            <!-- there are some issues going on with scaling the skeleton for FBX and other formats
-                 so we will start simple for now with just GLB files -->
-            <input type="file" id="upload-file" accept=".glb" style="display: none;" />
-            <label for="upload-file" class="button" id="load-model-button">Choose Skinned 3d Model File</label>
-            
-            <div id="skeleton-selection-container" >
-                <label for="skeleton-type-select">Choose Target Skeleton:</label>
-                <select id="skeleton-type-select" class="button">
-                    <option value="">-- Select Skeleton --</option>
-                    <option value="human">Human</option>
-                    <option value="quadraped">Quadruped (Fox)</option>
-                    <option value="bird">Bird</option>
-                    <option value="dragon">Dragon</option>
-                </select>               
-            </div>
 
-             <button class="button" id="bone-map-button" >Bone Map</button>
-             
-             <!-- Bone Mapping UI -->
-             <div id="bone-mapping-container" style="display: none; margin-top: 2rem;">
-                <h3>Bone Mapping</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-                    <div>
-                        <h4>Source Skeleton Bones</h4>
-                        <div id="source-bones-list" style="max-height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 1rem;">
-                            <!-- Source bones will be populated here -->
-                        </div>
-                    </div>
-                    <div>
-                        <h4>Target Skeleton Bones</h4>
-                        <div id="target-bones-list" style="max-height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 1rem;">
-                            <!-- Target bones will be populated here -->
-                        </div>
+        <!-- Tool Options Panel -->
+        <div id="tool-panel">
+            <h1>Bring your own rigged model</h1>
+
+            <p>Instructions and information go here with what this page is for</p>
+            <div style="display: flex; flex-direction: row; gap: 1rem; margin-top: 1rem;">
+                <!-- imported 3d skinned mesh and bones list-->
+                <div class="bone-map-section">
+                    <p>Your 3d rigged mesh</p>
+                    <!-- there are some issues going on with scaling the skeleton for FBX and other formats
+                         so we will start simple for now with just GLB files -->
+                    <input type="file" id="upload-file" accept=".glb" style="display: none;" />
+                    <label for="upload-file" class="button" id="load-model-button">Upload Skinned Model</label>
+                    
+                    <p>Bones List</p>
+                    <div id="source-bones-list">
+                        <p style="color: var(--text-secondary);">No source skeleton loaded</p>
                     </div>
                 </div>
-             </div>
+
+                <!-- target skeleton selection and bones list-->
+                <div class="bone-map-section">
+                    <h2>Mesh2Motion Skeleton</h2>
+                    <div id="skeleton-selection-container" >
+                        <!-- <label for="skeleton-type-select">Choose Target Skeleton:</label> -->
+                        <select id="skeleton-type-select" class="button">
+                            <option value="">-- Select Skeleton --</option>
+                            <option value="human">Human</option>
+                            <option value="quadraped">Quadruped (Fox)</option>
+                            <option value="bird">Bird</option>
+                            <option value="dragon">Dragon</option>
+                        </select>
+                    </div>
+                    
+                    <p>Bones List</p>
+                    <div id="target-bones-list" >
+                        <p style="color: var(--text-secondary);">No target skeleton loaded</p>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- 3d view controls shown on bottom right. This helps with click events -->

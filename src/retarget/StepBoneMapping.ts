@@ -8,7 +8,6 @@ export class StepBoneMapping extends EventTarget {
   private target_skeleton_type: SkeletonType = SkeletonType.None
 
   // DOM references
-  private bone_mapping_container: HTMLDivElement | null = null
   private source_bones_list: HTMLDivElement | null = null
   private target_bones_list: HTMLDivElement | null = null
 
@@ -19,12 +18,8 @@ export class StepBoneMapping extends EventTarget {
 
   public begin (): void {
     // Get DOM references
-    this.bone_mapping_container = document.getElementById('bone-mapping-container') as HTMLDivElement
     this.source_bones_list = document.getElementById('source-bones-list') as HTMLDivElement
     this.target_bones_list = document.getElementById('target-bones-list') as HTMLDivElement
-
-    // Show the bone mapping UI
-    this.show_bone_mapping_ui()
 
     // Populate the lists
     this.update_bone_lists()
@@ -33,12 +28,14 @@ export class StepBoneMapping extends EventTarget {
   public set_source_skeleton_data (skeleton_data: Group<Object3DEventMap>): void {
     this.source_skeleton_data = skeleton_data
     console.log('Source skeleton data set in bone mapping:', this.source_skeleton_data)
+    this.update_source_bones_list()
   }
 
   public set_target_skeleton_data (armature: Object3D, skeleton_type: SkeletonType): void {
     this.target_armature = armature
     this.target_skeleton_type = skeleton_type
     console.log('Target skeleton data set in bone mapping:', this.target_armature, 'Type:', this.target_skeleton_type)
+    this.update_target_bones_list()
   }
 
   public has_source_skeleton (): boolean {
@@ -114,7 +111,7 @@ export class StepBoneMapping extends EventTarget {
 
     const bone_names = this.get_source_bone_names()
     if (bone_names.length === 0) {
-      this.source_bones_list.innerHTML = '<p style="color: #888;">No source skeleton loaded</p>'
+      this.source_bones_list.innerHTML = '<em>No source skeleton loaded</em>'
       return
     }
 
@@ -133,7 +130,7 @@ export class StepBoneMapping extends EventTarget {
 
     const bone_names = this.get_target_bone_names()
     if (bone_names.length === 0) {
-      this.target_bones_list.innerHTML = '<p style="color: #888;">No target skeleton loaded</p>'
+      this.target_bones_list.innerHTML = '<em>No target skeleton loaded</em>'
       return
     }
 
@@ -145,17 +142,5 @@ export class StepBoneMapping extends EventTarget {
       bone_item.style.borderBottom = '1px solid #eee'
       this.target_bones_list?.appendChild(bone_item)
     })
-  }
-
-  private show_bone_mapping_ui (): void {
-    if (this.bone_mapping_container !== null) {
-      this.bone_mapping_container.style.display = 'block'
-    }
-  }
-
-  private hide_bone_mapping_ui (): void {
-    if (this.bone_mapping_container !== null) {
-      this.bone_mapping_container.style.display = 'none'
-    }
   }
 }
