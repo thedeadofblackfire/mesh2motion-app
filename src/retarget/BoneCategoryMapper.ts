@@ -6,22 +6,43 @@ import { BoneCategory, BoneMetadata, BoneSide } from './BoneAutoMapper'
  */
 export class BoneCategoryMapper {
   /**
-   * Map torso bones (spine, chest, neck, head, hips, pelvis)
+   * Performs exact name matching between source and target bones
+   * @param source_bones - Array of source bone metadata
+   * @param target_bones - Array of target bone metadata
+   * @param category_mappings - Map to store the bone name mappings
    */
-  static map_torso_bones (source_bones: BoneMetadata[], target_bones: BoneMetadata[]): Map<string, string> {
-    const category_mappings = new Map<string, string>()
-
-    // go through each target bone and find the best matching source bone
+  private static perform_exact_name_matching (
+    source_bones: BoneMetadata[],
+    target_bones: BoneMetadata[],
+    category_mappings: Map<string, string>
+  ): void {
     for (const target_bone_meta of target_bones) {
-      // do simple match if bone is an exact match to start
+      // Skip if already mapped
+      if (category_mappings.has(target_bone_meta.name)) continue
+
       for (const source_bone_meta of source_bones) {
         if (source_bone_meta.name === target_bone_meta.name) {
-          // add record to the category_mapping if exact match
           category_mappings.set(target_bone_meta.name, source_bone_meta.name)
           break
         }
       }
     }
+  }
+
+  /**
+   * Map torso bones (spine, chest, neck, head, hips, pelvis)
+   */
+  static map_torso_bones (source_bones: BoneMetadata[], target_bones: BoneMetadata[]): Map<string, string> {
+    const category_mappings = new Map<string, string>()
+
+    console.log('DEVELOPING THE TORSO MAPPER')
+    console.log('Source Bones:', source_bones)
+    console.log('Target Bones:', target_bones)
+
+    // Perform exact name matching first
+    this.perform_exact_name_matching(source_bones, target_bones, category_mappings)
+
+    // TODO: Add category-specific matching logic here
 
     return category_mappings
   }
@@ -32,17 +53,10 @@ export class BoneCategoryMapper {
   static map_arm_bones (source_bones: BoneMetadata[], target_bones: BoneMetadata[]): Map<string, string> {
     const category_mappings = new Map<string, string>()
 
-    // go through each target bone and find the best matching source bone
-    for (const target_bone_meta of target_bones) {
-      // do simple match if bone is an exact match to start
-      for (const source_bone_meta of source_bones) {
-        if (source_bone_meta.name === target_bone_meta.name) {
-          // add record to the category_mapping if exact match
-          category_mappings.set(target_bone_meta.name, source_bone_meta.name)
-          break
-        }
-      }
-    }
+    // Perform exact name matching first
+    this.perform_exact_name_matching(source_bones, target_bones, category_mappings)
+
+    // TODO: Add category-specific matching logic here
 
     return category_mappings
   }
@@ -53,17 +67,10 @@ export class BoneCategoryMapper {
   static map_hand_bones (source_bones: BoneMetadata[], target_bones: BoneMetadata[]): Map<string, string> {
     const category_mappings = new Map<string, string>()
 
-    // go through each target bone and find the best matching source bone
-    for (const target_bone_meta of target_bones) {
-      // do simple match if bone is an exact match to start
-      for (const source_bone_meta of source_bones) {
-        if (source_bone_meta.name === target_bone_meta.name) {
-          // add record to the category_mapping if exact match
-          category_mappings.set(target_bone_meta.name, source_bone_meta.name)
-          break
-        }
-      }
-    }
+    // Perform exact name matching first
+    this.perform_exact_name_matching(source_bones, target_bones, category_mappings)
+
+    // TODO: Add category-specific matching logic here
 
     return category_mappings
   }
@@ -74,17 +81,10 @@ export class BoneCategoryMapper {
   static map_leg_bones (source_bones: BoneMetadata[], target_bones: BoneMetadata[]): Map<string, string> {
     const category_mappings = new Map<string, string>()
 
-    // go through each target bone and find the best matching source bone
-    for (const target_bone_meta of target_bones) {
-      // do simple match if bone is an exact match to start
-      for (const source_bone_meta of source_bones) {
-        if (source_bone_meta.name === target_bone_meta.name) {
-          // add record to the category_mapping if exact match
-          category_mappings.set(target_bone_meta.name, source_bone_meta.name)
-          break
-        }
-      }
-    }
+    // Perform exact name matching first
+    this.perform_exact_name_matching(source_bones, target_bones, category_mappings)
+
+    // TODO: Add category-specific matching logic here
 
     return category_mappings
   }
@@ -95,17 +95,10 @@ export class BoneCategoryMapper {
   static map_wing_bones (source_bones: BoneMetadata[], target_bones: BoneMetadata[]): Map<string, string> {
     const category_mappings = new Map<string, string>()
 
-    // go through each target bone and find the best matching source bone
-    for (const target_bone_meta of target_bones) {
-      // do simple match if bone is an exact match to start
-      for (const source_bone_meta of source_bones) {
-        if (source_bone_meta.name === target_bone_meta.name) {
-          // add record to the category_mapping if exact match
-          category_mappings.set(target_bone_meta.name, source_bone_meta.name)
-          break
-        }
-      }
-    }
+    // Perform exact name matching first
+    this.perform_exact_name_matching(source_bones, target_bones, category_mappings)
+
+    // TODO: Add category-specific matching logic here
 
     return category_mappings
   }
@@ -116,17 +109,10 @@ export class BoneCategoryMapper {
   static map_tail_bones (source_bones: BoneMetadata[], target_bones: BoneMetadata[]): Map<string, string> {
     const category_mappings = new Map<string, string>()
 
-    // go through each target bone and find the best matching source bone
-    for (const target_bone_meta of target_bones) {
-      // do simple match if bone is an exact match to start
-      for (const source_bone_meta of source_bones) {
-        if (source_bone_meta.name === target_bone_meta.name) {
-          // add record to the category_mapping if exact match
-          category_mappings.set(target_bone_meta.name, source_bone_meta.name)
-          break
-        }
-      }
-    }
+    // Perform exact name matching first
+    this.perform_exact_name_matching(source_bones, target_bones, category_mappings)
+
+    // TODO: Add category-specific matching logic here
 
     return category_mappings
   }
@@ -137,17 +123,10 @@ export class BoneCategoryMapper {
   static map_unknown_bones (source_bones: BoneMetadata[], target_bones: BoneMetadata[]): Map<string, string> {
     const category_mappings = new Map<string, string>()
 
-    // go through each target bone and find the best matching source bone
-    for (const target_bone_meta of target_bones) {
-      // do simple match if bone is an exact match to start
-      for (const source_bone_meta of source_bones) {
-        if (source_bone_meta.name === target_bone_meta.name) {
-          // add record to the category_mapping if exact match
-          category_mappings.set(target_bone_meta.name, source_bone_meta.name)
-          break
-        }
-      }
-    }
+    // Perform exact name matching first
+    this.perform_exact_name_matching(source_bones, target_bones, category_mappings)
+
+    // TODO: Add category-specific matching logic here
 
     return category_mappings
   }

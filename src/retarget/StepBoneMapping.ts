@@ -108,7 +108,7 @@ export class StepBoneMapping extends EventTarget {
       }
     })
 
-    return bone_names
+    return bone_names.sort()
   }
 
   // Extract bone names from target skeleton (uploaded mesh)
@@ -117,19 +117,24 @@ export class StepBoneMapping extends EventTarget {
       return []
     }
 
-    const bone_names: string[] = []
+    // Keep unique bone names only
+    // It is common that multiple SkinnedMesh share the same skeleton, so bones may be duplicated
+    // we only need unique names for mapping. The Mixamo default model rig is a good example of this.
+    const bone_names_set = new Set<string>()
+
     // Target skeleton data contains SkinnedMesh objects with skeleton property
+    // Use Set to avoid duplicates when multiple SkinnedMesh share the same skeleton
     this.target_skeleton_data.traverse((child) => {
       if (child.type === 'SkinnedMesh') {
         const skinned_mesh = child as SkinnedMesh
         const skeleton = skinned_mesh.skeleton
         skeleton.bones.forEach((bone) => {
-          bone_names.push(bone.name)
+          bone_names_set.add(bone.name)
         })
       }
     })
 
-    return bone_names
+    return Array.from(bone_names_set).sort()
   }
 
   // Update UI with current bone lists
