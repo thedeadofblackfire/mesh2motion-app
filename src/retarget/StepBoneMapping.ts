@@ -107,6 +107,10 @@ export class StepBoneMapping extends EventTarget {
     return this.source_skeleton_type
   }
 
+  public get_target_mapping_template (): TargetBoneMappingType {
+    return this.target_mapping_template
+  }
+
   // Extract bone names from source skeleton (Mesh2Motion skeleton)
   public get_source_bone_names (): string[] {
     if (this.source_armature === null) {

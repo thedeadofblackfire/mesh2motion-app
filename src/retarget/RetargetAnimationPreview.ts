@@ -1,8 +1,9 @@
-import { AnimationClip, AnimationMixer, type Scene, type SkinnedMesh, VectorKeyframeTrack, QuaternionKeyframeTrack, type AnimationAction } from 'three'
+import { AnimationClip, AnimationMixer, type Scene, type SkinnedMesh, VectorKeyframeTrack, QuaternionKeyframeTrack, type AnimationAction, Quaternion, Euler } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { SkeletonType } from '../lib/enums/SkeletonType.ts'
 import { AnimationUtility } from '../lib/processes/animations-listing/AnimationUtility.ts'
 import type { StepBoneMapping } from './StepBoneMapping.ts'
+import { TargetBoneMappingType } from './StepBoneMapping.ts'
 
 /**
  * RetargetAnimationPreview - Provides live preview of bone retargeting by automatically
@@ -261,8 +262,56 @@ export class RetargetAnimationPreview extends EventTarget {
       new_tracks
     )
 
+    // Apply Mixamo-specific corrections
+    this.apply_mixamo_corrections(retargeted_clip)
+
     console.log(`Retargeted animation: ${source_clip.name} (${new_tracks.length} tracks)`)
     return retargeted_clip
+  }
+
+  /**
+   * Apply Mixamo-specific corrections to retargeted animation
+   * Mixamo rigs don't have a root bone, so we need to rotate the hips by -90 degrees on X axis
+   */
+  private apply_mixamo_corrections (animation_clip: AnimationClip): void {
+    const target_mapping_type = this.step_bone_mapping.get_target_mapping_template()
+    
+    if (target_mapping_type !== TargetBoneMappingType.Mixamo) {
+      return // Only apply corrections for Mixamo rigs
+    }
+
+    console.log('Applying Mixamo hips rotation correction (-90 degrees on X axis)')
+
+    // Find the hips quaternion track (Mixamo uses "mixamorigHips.quaternion")
+    const hips_track = animation_clip.tracks.find(track => 
+      track.name.toLowerCase().includes('hips') && track.name.includes('quaternion')
+    )
+
+    // Create a rotation to compensate for Mixamo's 90-degree X rotation
+    // We need to rotate by -90 degrees (or -PI/2 radians) on the X axis
+    const correction_rotation = new Quaternion().setFromEuler(new Euler(-Math.PI / 2, 0, 0, 'XYZ'))
+
+    // Apply correction to all keyframes in the hips track
+    const values = hips_track.values
+    for (let i = 0; i < values.length; i += 4) {
+      const original_quat = new Quaternion(
+        values[i],     // x
+        values[i + 1], // y
+        values[i + 2], // z
+        values[i + 3]  // w
+      )
+
+      // Apply the correction: multiply correction * original
+      original_quat.premultiply(correction_rotation)
+
+      // Write back the corrected quaternion
+      values[i] = original_quat.x
+      values[i + 1] = original_quat.y
+      values[i + 2] = original_quat.z
+      values[i + 3] = original_quat.w
+    }
+
+    console.log('Mixamo hips rotation correction applied')
   }
 
   /**
