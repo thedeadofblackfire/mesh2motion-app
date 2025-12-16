@@ -278,16 +278,19 @@ export class RetargetAnimationPreview extends EventTarget {
   /**
    * Apply rotations to specific bones to correct them and normalize them for Mesh2Motion animations
    */
-  private rotate_bone_for_retargeting (animation_clip: AnimationClip, bone_match_pattern: string, rotate_obj: Euler): void {
+  private rotate_bone_for_retargeting (
+    animation_clip: AnimationClip,
+    bone_match_pattern: string[], rotate_obj: Euler,
+    space: 'local' | 'world'): void {
     // Find all shoulder quaternion tracks (e.g., mixamorigLeftShoulder.quaternion)
     const tracks_to_change = animation_clip.tracks.filter(track =>
-      track.name.toLowerCase().includes(bone_match_pattern.toLowerCase()) && track.name.includes('quaternion')
+      bone_match_pattern.some(pattern => track.name.toLowerCase().includes(pattern.toLowerCase())) && track.name.includes('quaternion')
     ) as Array<{ name: string, times: Float32Array | number[], values: Float32Array | number[] }>
 
     if (tracks_to_change.length === 0) return
 
     // Object axis rotation amount. Final value is quaternion
-    const rotation_amount: Quaternion = new Quaternion().setFromEuler(rotate_obj)
+    let rotation_amount: Quaternion = new Quaternion().setFromEuler(rotate_obj)
 
     for (const track of tracks_to_change) {
       const name_info = this.parse_track_name(track.name)
@@ -302,8 +305,23 @@ export class RetargetAnimationPreview extends EventTarget {
           values[i + 3] // w
         )
 
-        // use premultiply to apply in world/object space
-        original_quat.premultiply(rotation_amount)
+        // if the track is a left/right combo, we may need to invert the rotation on one side
+        // if there is no left/right info, this will be skipped and work as normal
+
+        if (name_info.bone_name.toLowerCase().includes('left')) {
+          rotation_amount = new Quaternion().setFromEuler(new Euler(-rotate_obj.x, -rotate_obj.y, -rotate_obj.z, 'XYZ'))
+        } else {
+          rotation_amount = new Quaternion().setFromEuler(rotate_obj) // original value brought in
+        }
+
+
+
+        // have an option with how to rotate things
+        if (space === 'local') {
+          original_quat.multiply(rotation_amount)
+        } else {
+          original_quat.premultiply(rotation_amount)
+        }
 
         values[i] = original_quat.x
         values[i + 1] = original_quat.y
@@ -318,41 +336,32 @@ export class RetargetAnimationPreview extends EventTarget {
    * Mixamo rigs don't have a root bone, so we need to rotate the hips by -90 degrees on X axis
    */
   private apply_mixamo_corrections (animation_clip: AnimationClip): void {
-    // apply hip rotation correct. TODO: extract this to a separate class for rotation
-    // Find the hips quaternion track (Mixamo uses "mixamorigHips.quaternion")
-    const hips_track = animation_clip.tracks.find(track =>
-      track.name.toLowerCase().includes('hips') && track.name.includes('quaternion')
-    )
+    // hips fix - Mixamo hips are rotated -90 degrees on X axis compared to M2M standard
+    // this hips rotation is temporary. It would be better to rotate the entire skinned mesh by -90 degrees on X axis
+    let rotation_amount: Euler = new Euler(this.deg_to_rad(-90), 0, 0, 'XYZ')
+    this.rotate_bone_for_retargeting(animation_clip, ['hips'], rotation_amount, 'world')
 
-    // Create a rotation to compensate for Mixamo's 90-degree X rotation
-    // We need to rotate by -90 degrees (or -PI/2 radians) on the X axis
-    const correction_rotation = new Quaternion().setFromEuler(new Euler(-Math.PI / 2, 0, 0, 'XYZ'))
+    // shoulder fix - Mixamo shoulders are rotated 180 degrees on X axis compared to M2M standard
+    rotation_amount = new Euler(0, this.deg_to_rad(-180), 0, 'XYZ')
+    this.rotate_bone_for_retargeting(animation_clip, ['shoulder'], rotation_amount, 'local')
 
-    // Apply correction to all keyframes in the hips track
-    const values = (hips_track as any)?.values as number[] | Float32Array | undefined
-    if (values !== undefined) {
-      for (let i = 0; i < values.length; i += 4) {
-        const original_quat = new Quaternion(
-          values[i], // x
-          values[i + 1], // y
-          values[i + 2], // z
-          values[i + 3] // w
-        )
 
-        // Apply the correction: multiply correction * original
-        original_quat.premultiply(correction_rotation)
+    // should fix 2 - Tilt shoulder back a bit along the Y axis
+    // rotation_amount = new Euler(this.deg_to_rad(30), 0, 0, 'XYZ')
+    // this.rotate_bone_for_retargeting(animation_clip, ['RightArm', 'LeftArm'], rotation_amount, 'local')
 
-        // Write back the corrected quaternion
-        values[i] = original_quat.x
-        values[i + 1] = original_quat.y
-        values[i + 2] = original_quat.z
-        values[i + 3] = original_quat.w
-      }
-      console.log('Mixamo hips rotation correction applied')
-    }
+    // upper arm fix - Mixamo upper arms are rotated 90 degrees on X axis compared to M2M standard
+    // rotation_amount = new Euler(0, this.deg_to_rad(90), 0, 'XYZ')
+    // this.rotate_bone_for_retargeting(animation_clip, ['RightArm', 'LeftArm'], rotation_amount, 'local')
 
-    const rotation_amount: Euler = new Euler(-Math.PI, 0, 0, 'XYZ')
-    this.rotate_bone_for_retargeting(animation_clip, 'shoulder', rotation_amount)
+
+
+    console.log('Applied Mixamo-specific corrections to retargeted animation', animation_clip)
+  }
+
+  // helps when specifying rotations in degrees with retargeting corrections
+  private deg_to_rad (deg: number): number {
+    return deg * Math.PI / 180
   }
 
   /**
