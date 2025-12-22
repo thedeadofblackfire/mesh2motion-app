@@ -66,21 +66,25 @@ class RetargetModule {
         bone_mapping_step.style.display = 'inline'
       }
 
+      // show the skeleton helper again since we hid it while on the animation listing step
+      this.step_load_source_skeleton.show_skeleton_helper(true)
+
       // stop the animation listing step
       if (this.animation_listing_step !== null) {
         this.animation_listing_step.stop_preview()
       }
 
-      // start the live preview again
+      // start the live preview again and hide the animation player
       this.start_live_preview()
+      this.mesh2motion_engine.show_animation_player(false)
     }
 
     // Listen for source skeleton (Mesh2Motion) loaded
     this.step_load_source_skeleton.addEventListener('skeleton-loaded', () => {
       const source_armature = this.step_load_source_skeleton.get_loaded_source_armature()
       const skeleton_type = this.step_load_source_skeleton.get_skeleton_type()
+
       this.step_bone_mapping.set_source_skeleton_data(source_armature, skeleton_type)
-      this.start_live_preview()
     })
 
     // Listen for target model (user-uploaded) loaded
@@ -103,6 +107,9 @@ class RetargetModule {
         animation_export_options.style.display = 'inline'
       }
 
+      // hide the skeleton helper that is offset since we have committed and are continuing
+      this.step_load_source_skeleton.show_skeleton_helper(false)
+
       // stop the live preview step from playing its animation
       this.retarget_animation_preview.stop_preview()
 
@@ -112,6 +119,7 @@ class RetargetModule {
         this.step_bone_mapping
       )
       this.animation_listing_step.begin(this.step_load_source_skeleton.get_skeleton_type())
+      this.mesh2motion_engine.show_animation_player(true)
 
       const retargetable_meshes: Scene | null = this.step_load_target_model.get_retargetable_meshes()
 

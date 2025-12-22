@@ -208,11 +208,6 @@ export class RetargetAnimationListing extends EventTarget {
     return this.animation_search?.get_selected_animation_indices() ?? []
   }
 
-  // public frame_change (delta_time: number): void {
-  //   this.mixer().update(delta_time)
-  //   this.animation_player.update(delta_time)
-  // }
-
   private setup_animation_loop (): void {
     let last_time = performance.now()
     const animate = (): void => {

@@ -269,6 +269,21 @@ export class Mesh2MotionEngine {
     }
   }
 
+  // the retargeting functionality also uses, so expose this out publicly
+  public show_animation_player (show: boolean): void {
+    if (this.ui.dom_animation_player === null) {
+      console.error('Cannot find animation player DOM element to show/hide')
+      return
+    }
+
+    if (show) {
+      this.ui.dom_animation_player.style.display = 'flex'
+      return
+    }
+
+    this.ui.dom_animation_player.style.display = 'none'
+  }
+
   public process_step_changed (process_step: ProcessStep): ProcessStep {
     // we will have the current step turn on the UI elements it needs
     this.ui.hide_all_elements()
@@ -281,12 +296,10 @@ export class Mesh2MotionEngine {
     this.load_skeleton_step.dispose()
 
     // only show animation player on the animation listing page
-    if (this.ui.dom_animation_player !== null) {
-      this.ui.dom_animation_player.style.display = 'none'
-
-      if (process_step === ProcessStep.AnimationsListing) {
-        this.ui.dom_animation_player.style.display = 'flex'
-      }
+    if (process_step === ProcessStep.AnimationsListing) {
+      this.show_animation_player(true)
+    } else {
+      this.show_animation_player(false)
     }
 
     /**********

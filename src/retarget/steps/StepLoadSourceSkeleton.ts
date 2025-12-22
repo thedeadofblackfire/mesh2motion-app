@@ -146,6 +146,12 @@ export class StepLoadSourceSkeleton extends EventTarget {
     return has_bones
   }
 
+  public show_skeleton_helper (visible: boolean): void {
+    if (this.skeleton_helper !== null) {
+      this.skeleton_helper.visible = visible
+    }
+  }
+
   private add_skeleton_and_helper_to_scene (): void {
     // Add the source skeleton to the scene
     this._main_scene.add(this.loaded_source_armature)
