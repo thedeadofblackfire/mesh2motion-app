@@ -104,6 +104,8 @@ export class ModelCleanupUtility {
     return new_scene
   }
 
+
+  // NOT USED FOR NOW
   /**
    * We need to keep parents of skinned meshes and bones for retargeting
    * This is because the hierarchy is important for retargeting to work properly

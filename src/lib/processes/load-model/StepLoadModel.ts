@@ -315,7 +315,9 @@ export class StepLoadModel extends EventTarget {
     // strip out things differently if we need to preserve skinned meshes or regular meshes
     let clean_scene_with_only_models: Scene
     if (this.preserve_skinned_mesh) {
-      clean_scene_with_only_models = ModelCleanupUtility.strip_out_retargeting_model_data(this.original_model_data)
+      // need to be careful with cleaning up and skeleton data. it can break the hierarchy
+      // and mess up the skinned mesh and exports. So for now, just keep everything
+      clean_scene_with_only_models = this.original_model_data
     } else {
       clean_scene_with_only_models = ModelCleanupUtility.strip_out_all_unecessary_model_data(this.original_model_data, this.model_display_name, this.debug_model_loading)
     }
