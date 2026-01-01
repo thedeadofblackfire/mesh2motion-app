@@ -9,16 +9,14 @@ export class StepExportRetargetedAnimations extends EventTarget {
   // Retargeting-related properties
   private bone_mapping = new Map<string, string>()
   private target_mapping_type: TargetBoneMappingType = TargetBoneMappingType.None
-  private source_armature: Group | null = null
   private target_skeleton_data: Scene | null = null
   private target_skinned_meshes: SkinnedMesh[] = []
   private target_rig_scene: Scene | null = null
 
   public setup_retargeting (target_rig_scene: Scene, meshes: SkinnedMesh[], bone_mapping: Map<string, string>,
-    mapping_type: TargetBoneMappingType, armature: Group, skeleton_data: Scene | null): void {
+    mapping_type: TargetBoneMappingType, skeleton_data: Scene | null): void {
     this.bone_mapping = bone_mapping
     this.target_mapping_type = mapping_type
-    this.source_armature = armature
     this.target_skeleton_data = skeleton_data
     this.target_skinned_meshes = meshes
     this.target_rig_scene = target_rig_scene
@@ -51,7 +49,6 @@ export class StepExportRetargetedAnimations extends EventTarget {
         clip,
         this.bone_mapping,
         this.target_mapping_type,
-        this.source_armature,
         this.target_skeleton_data,
         this.target_skinned_meshes // use the meshes being exported as the target
       )
@@ -97,11 +94,6 @@ export class StepExportRetargetedAnimations extends EventTarget {
     })
   }
 
-  /**
-   * 
-   * @param blob 
-   * @param filename 
-   */
   private save_file (blob: Blob, filename: string): void {
     const export_button_hidden_link: HTMLAnchorElement | null = document.querySelector('#download-hidden-link')
     if (export_button_hidden_link != null) {

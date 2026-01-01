@@ -82,10 +82,12 @@ class RetargetModule {
 
     // Listen for source skeleton (Mesh2Motion) loaded
     this.step_load_source_skeleton.addEventListener('skeleton-loaded', () => {
-      const source_armature = this.step_load_source_skeleton.get_loaded_source_armature()
+      const source_armature = this.step_load_source_skeleton.get_loaded_source_armature() as import('three').Group
       const skeleton_type = this.step_load_source_skeleton.get_skeleton_type()
-      AnimationRetargetService.getInstance().set_skeleton_type(skeleton_type)
-      this.step_bone_mapping.set_source_skeleton_data(source_armature)
+      const anim_service = AnimationRetargetService.getInstance()
+      anim_service.set_skeleton_type(skeleton_type)
+      anim_service.set_source_armature(source_armature)
+      this.step_bone_mapping.set_source_skeleton_data()
     })
 
     // Listen for target model (user-uploaded) loaded

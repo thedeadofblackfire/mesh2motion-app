@@ -186,7 +186,6 @@ export class RetargetAnimationPreview extends EventTarget {
       this.current_animation_clip,
       bone_mappings,
       this.step_bone_mapping.get_target_mapping_template(),
-      this.step_bone_mapping.get_source_armature(),
       this.step_bone_mapping.get_target_skeleton_data(),
       this.target_skinned_meshes
     )

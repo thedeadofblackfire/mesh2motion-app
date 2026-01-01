@@ -210,7 +210,6 @@ export class RetargetAnimationListing extends EventTarget {
       display_clip,
       bone_mappings,
       this.step_bone_mapping.get_target_mapping_template(),
-      this.step_bone_mapping.get_source_armature(),
       this.step_bone_mapping.get_target_skeleton_data(),
       this.skinned_meshes_to_animate
     )
@@ -250,7 +249,6 @@ export class RetargetAnimationListing extends EventTarget {
           this.skinned_meshes_to_animate,
           this.step_bone_mapping.get_bone_mapping(),
           this.step_bone_mapping.get_target_mapping_template(),
-          this.step_bone_mapping.get_source_armature(),
           this.step_bone_mapping.get_target_skeleton_data()
         )
         this.step_export_retargeted_animations.export('retargeted_animations')

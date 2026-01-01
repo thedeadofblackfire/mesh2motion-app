@@ -18,11 +18,21 @@ export interface TrackNameParts {
 export class AnimationRetargetService {
   private static instance: AnimationRetargetService | null = null
 
+  // #region Central Data Properties
   /**
    * Get/set for the skeleton type. This will be the source of truth
    * for other classes to grab this data
    */
   private skeleton_type: SkeletonType = SkeletonType.None
+  private source_armature: Group | null = null
+  public set_source_armature (armature: Group | null): void {
+    this.source_armature = armature
+  }
+
+  public get_source_armature (): Group | null {
+    return this.source_armature
+  }
+
   public set_skeleton_type (type: SkeletonType): void {
     this.skeleton_type = type
   }
@@ -30,6 +40,8 @@ export class AnimationRetargetService {
   public get_skeleton_type (): SkeletonType {
     return this.skeleton_type
   }
+
+  // #endregion
 
   private constructor () {}
 
@@ -54,7 +66,6 @@ export class AnimationRetargetService {
     source_clip: AnimationClip,
     bone_mappings: Map<string, string>,
     target_mapping_type: TargetBoneMappingType,
-    source_armature: Group | null = null,
     target_skeleton_data: Scene | null = null,
     target_skinned_meshes: SkinnedMesh[] = []
   ): AnimationClip {
@@ -100,7 +111,6 @@ export class AnimationRetargetService {
       this.apply_bone_rotation_correction(
         retargeted_clip,
         bone_mappings,
-        source_armature,
         target_skeleton_data,
         target_skinned_meshes
       )
@@ -133,7 +143,6 @@ export class AnimationRetargetService {
   private apply_bone_rotation_correction (
     animation_clip: AnimationClip,
     bone_mappings: Map<string, string>,
-    source_armature: Group | null,
     target_skeleton_data: Scene | null,
     target_skinned_meshes: SkinnedMesh[]
   ): void {
@@ -141,7 +150,6 @@ export class AnimationRetargetService {
       const delta = this.calculate_bone_rotation_delta(
         source_bone_name,
         target_bone_name,
-        source_armature,
         target_skeleton_data,
         target_skinned_meshes
       )
@@ -171,17 +179,16 @@ export class AnimationRetargetService {
   private calculate_bone_rotation_delta (
     source_bone_name: string,
     target_bone_name: string,
-    source_armature: Group | null,
     target_skeleton_data: Scene | null,
     target_skinned_meshes: SkinnedMesh[]
   ): Quaternion | null {
-    if (source_armature === null || target_skeleton_data === null) {
+    if (this.source_armature === null || target_skeleton_data === null) {
       console.warn('Cannot calculate rotation delta: missing skeleton data')
       return null
     }
 
     // Find source bone and target bone with normalized matching
-    const source_bone = this.find_bone_by_name(source_armature, [], source_bone_name)
+    const source_bone = this.find_bone_by_name(this.source_armature, [], source_bone_name)
     const target_bone = this.find_bone_by_name(target_skeleton_data, target_skinned_meshes, target_bone_name)
 
     if (source_bone === null || target_bone === null) {

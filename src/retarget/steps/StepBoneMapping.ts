@@ -2,6 +2,7 @@ import { Group, type Object3D, type Object3DEventMap, type Scene, type SkinnedMe
 import { SkeletonType } from '../../lib/enums/SkeletonType.ts'
 import { BoneAutoMapper } from '../bone-automap/BoneAutoMapper.ts'
 import { MixamoMapper } from '../bone-automap/MixamoMapper.ts'
+import { AnimationRetargetService } from '../AnimationRetargetService.ts'
 
 // when we are auto-mapping, keep track of what rig type we matched target against
 export enum TargetBoneMappingType {
@@ -16,9 +17,6 @@ export class StepBoneMapping extends EventTarget {
   private readonly _main_scene: Scene
   private target_skeleton_data: Scene | null = null
   private target_mapping_template: TargetBoneMappingType = TargetBoneMappingType.None
-
-  private source_armature: Group = new Group()
-  private source_skeleton_type: SkeletonType = SkeletonType.None
 
   // DOM references
   private source_bones_list: HTMLDivElement | null = null
@@ -75,10 +73,7 @@ export class StepBoneMapping extends EventTarget {
     }
   }
 
-  public set_source_skeleton_data (armature: Group, skeleton_type: SkeletonType): void {
-    this.source_armature = armature
-
-    this.source_skeleton_type = skeleton_type
+  public set_source_skeleton_data (): void {
     this.update_source_bones_list()
     this.update_auto_map_button_visibility()
   }
@@ -91,7 +86,7 @@ export class StepBoneMapping extends EventTarget {
   }
 
   public has_source_skeleton (): boolean {
-    return this.source_armature !== null
+    return AnimationRetargetService.getInstance().get_source_armature() !== null
   }
 
   public has_target_skeleton (): boolean {
@@ -103,16 +98,8 @@ export class StepBoneMapping extends EventTarget {
   }
 
   // Getters
-  public get_source_armature (): Group {
-    return this.source_armature
-  }
-
   public get_target_skeleton_data (): Scene | null {
     return this.target_skeleton_data
-  }
-
-  public get_source_skeleton_type (): SkeletonType {
-    return this.source_skeleton_type
   }
 
   public get_target_mapping_template (): TargetBoneMappingType {
@@ -121,12 +108,12 @@ export class StepBoneMapping extends EventTarget {
 
   // Extract bone names from source skeleton (Mesh2Motion skeleton)
   public get_source_bone_names (): string[] {
-    if (this.source_armature === null) {
+    if (AnimationRetargetService.getInstance().get_source_armature() === null) {
       return []
     }
 
     const bone_names: string[] = []
-    this.source_armature.traverse((child) => {
+    AnimationRetargetService.getInstance().get_source_armature()?.traverse((child) => {
       if (child.type === 'Bone') {
         bone_names.push(child.name)
       }
@@ -380,9 +367,13 @@ export class StepBoneMapping extends EventTarget {
       this.target_mapping_template = TargetBoneMappingType.Custom
     }
 
+    if (this.target_skeleton_data === null) {
+      console.error('Target skeleton data is null during auto-mapping')
+      return
+    }
+
     // Use BoneAutoMapper to generate mappings
     const auto_mappings = BoneAutoMapper.auto_map_bones(
-      this.source_armature,
       this.target_skeleton_data,
       this.target_mapping_template
     )

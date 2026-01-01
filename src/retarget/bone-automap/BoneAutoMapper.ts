@@ -2,6 +2,7 @@ import { Bone, Group, Object3D, Scene, SkinnedMesh } from 'three'
 import { BoneCategoryMapper } from './BoneCategoryMapper'
 import { MixamoMapper } from './MixamoMapper'
 import { TargetBoneMappingType } from '../steps/StepBoneMapping'
+import { AnimationRetargetService } from '../AnimationRetargetService'
 
 /**
  * Bone categories for grouping bones by anatomical area
@@ -51,22 +52,28 @@ export class BoneAutoMapper {
    * @returns Map of target bone name -> source bone name
    */
   public static auto_map_bones (
-    source_armature: Group,
     target_skeleton_data: Scene,
     target_bone_mapping_type: TargetBoneMappingType
   ): Map<string, string> {
     // mappings: final output mapping of target bone name to source bone name
     let mappings = new Map<string, string>()
 
+    // Traverse source skeleton to build parent-child relationships
+    const source_armature: Group | null = AnimationRetargetService.getInstance().get_source_armature()
+    if (source_armature === null) {
+      console.error('Source armature is null while extracting bone parent map.')
+      return new Map<string, string>()
+    }
+
     // Extract bone data from both skeletons
     // this also contains the parent bone relationship
     // which will help us later when doing auto-mapping calculations
-    const source_parent_map: Map<string, string | null> = this.extract_source_bone_parent_map(source_armature)
-    const target_parent_map: Map<string, string | null> = this.extract_target_bone_parent_map(target_skeleton_data)
+    const source_parent_map: Map<string, string | null> = BoneAutoMapper.extract_source_bone_parent_map(source_armature)
+    const target_parent_map: Map<string, string | null> = BoneAutoMapper.extract_target_bone_parent_map(target_skeleton_data)
 
     // Create metadata for both source and target bones
-    const source_bones_meta: BoneMetadata[] = this.create_all_bone_metadata(source_parent_map)
-    const target_bones_meta: BoneMetadata[] = this.create_all_bone_metadata(target_parent_map)
+    const source_bones_meta: BoneMetadata[] = BoneAutoMapper.create_all_bone_metadata(source_parent_map)
+    const target_bones_meta: BoneMetadata[] = BoneAutoMapper.create_all_bone_metadata(target_parent_map)
 
     console.log('\n=== FINAL BONE METADATA ===')
     console.log('Source bones metadata:', source_bones_meta)
@@ -147,7 +154,6 @@ export class BoneAutoMapper {
   private static extract_source_bone_parent_map (source_armature: Group): Map<string, string | null> {
     const parent_map = new Map<string, string | null>()
 
-    // Traverse source skeleton to build parent-child relationships
     source_armature.traverse((child: Object3D) => {
       if (child.type === 'Bone') {
         const bone = child
