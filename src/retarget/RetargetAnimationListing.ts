@@ -5,7 +5,6 @@ import { type AnimationClip, AnimationMixer, type SkinnedMesh, Object3D, type An
 import type { ThemeManager } from '../lib/ThemeManager.ts'
 import { type TransformedAnimationClipPair } from '../lib/processes/animations-listing/interfaces/TransformedAnimationClipPair.ts'
 import { AnimationRetargetService } from './AnimationRetargetService.ts'
-import { type StepBoneMapping } from './steps/StepBoneMapping.ts'
 import { StepExportRetargetedAnimations } from './steps/StepExportRetargetedAnimations.ts'
 
 /**
@@ -16,7 +15,6 @@ export class RetargetAnimationListing extends EventTarget {
   private readonly theme_manager: ThemeManager
   private readonly animation_player: AnimationPlayer
   private readonly animation_loader: AnimationLoader = new AnimationLoader()
-  private readonly step_bone_mapping: StepBoneMapping
   private readonly step_export_retargeted_animations: StepExportRetargetedAnimations = new StepExportRetargetedAnimations()
   private animation_clips_loaded: TransformedAnimationClipPair[] = []
   private animation_mixer: AnimationMixer = new AnimationMixer(new Object3D())
@@ -29,11 +27,10 @@ export class RetargetAnimationListing extends EventTarget {
 
   private export_button: HTMLButtonElement | null = null
 
-  constructor (theme_manager: ThemeManager, step_bone_mapping: StepBoneMapping) {
+  constructor (theme_manager: ThemeManager) {
     super()
     this.theme_manager = theme_manager
     this.animation_player = new AnimationPlayer()
-    this.step_bone_mapping = step_bone_mapping
   }
 
   public begin (): void {
@@ -177,18 +174,9 @@ export class RetargetAnimationListing extends EventTarget {
     // Stop all current actions
     this.animation_mixer.stopAllAction()
 
-    // Get bone mappings from the bone mapping step
-    const bone_mappings = this.step_bone_mapping.get_bone_mapping()
-
-    if (bone_mappings.size === 0) {
-      console.warn('No bone mappings available. Cannot play retargeted animation.')
-      return
-    }
-
     // Retarget the animation using the shared service
     const retargeted_clip: AnimationClip = AnimationRetargetService.getInstance().retarget_animation_clip(
-      display_clip,
-      bone_mappings
+      display_clip
     )
 
     // Create new actions for each skinned mesh with the retargeted animation
@@ -221,9 +209,6 @@ export class RetargetAnimationListing extends EventTarget {
       )
 
       // configure the export out step with retargeting info
-      this.step_export_retargeted_animations.setup_retargeting(
-        this.step_bone_mapping.get_bone_mapping()
-      )
       this.step_export_retargeted_animations.export('retargeted_animations')
     })
   }

@@ -10,7 +10,6 @@ import { AnimationRetargetService } from './AnimationRetargetService.ts'
  * loading and playing animations while applying bone mappings in real-time
  */
 export class RetargetAnimationPreview extends EventTarget {
-  private readonly _main_scene: Scene
   private readonly step_bone_mapping: StepBoneMapping
   private readonly gltf_loader: GLTFLoader = new GLTFLoader()
 
@@ -21,9 +20,8 @@ export class RetargetAnimationPreview extends EventTarget {
   private is_preview_active: boolean = false
   private has_added_event_listeners: boolean = false
 
-  constructor (main_scene: Scene, step_bone_mapping: StepBoneMapping) {
+  constructor (step_bone_mapping: StepBoneMapping) {
     super()
-    this._main_scene = main_scene
     this.step_bone_mapping = step_bone_mapping
   }
 
@@ -61,26 +59,6 @@ export class RetargetAnimationPreview extends EventTarget {
       console.log('Cannot start preview: both skeletons are required')
       return
     }
-
-    // bone mappings might have chnaged
-    // const target_skeleton_data = this.step_bone_mapping.get_target_skeleton_data()
-    // if (target_skeleton_data === null) {
-    //   console.log('Cannot start preview: target skeleton data is null')
-    //   return
-    // }
-
-    // // Extract skinned meshes from target skeleton data
-    // this.target_skinned_meshes = []
-    // target_skeleton_data.traverse((child) => {
-    //   if (child.type === 'SkinnedMesh') {
-    //     this.target_skinned_meshes.push(child as SkinnedMesh)
-    //   }
-    // })
-
-    // if (this.target_skinned_meshes.length === 0) {
-    //   console.log('Cannot start preview: no skinned meshes found in target')
-    //   return
-    // }
 
     // Create animation mixer for the target skeleton
     // Use a dummy Object3D as root since we apply animations directly to skinned meshes
@@ -173,18 +151,9 @@ export class RetargetAnimationPreview extends EventTarget {
     // Stop any currently playing animation
     this.animation_mixer.stopAllAction()
 
-    // Get current bone mappings
-    const bone_mappings = this.step_bone_mapping.get_bone_mapping()
-
-    if (bone_mappings.size === 0) {
-      console.log('No bone mappings yet, skipping animation retarget')
-      return
-    }
-
     // Create retargeted animation clip using shared service
     this.retargeted_animation_clip = AnimationRetargetService.getInstance().retarget_animation_clip(
-      this.current_animation_clip,
-      bone_mappings
+      this.current_animation_clip
     )
 
     this.play_default_animation()

@@ -5,13 +5,6 @@ import { AnimationRetargetService } from '../AnimationRetargetService'
 export class StepExportRetargetedAnimations extends EventTarget {
   public animation_clips_to_export: AnimationClip[] = []
 
-  // Retargeting-related properties
-  private bone_mapping = new Map<string, string>()
-
-  public setup_retargeting (bone_mapping: Map<string, string>): void {
-    this.bone_mapping = bone_mapping
-  }
-
   public set_animation_clips_to_export (all_animations_clips: AnimationClip[], animation_checkboxes: number[]): void {
     this.animation_clips_to_export = []
     animation_checkboxes.forEach((indx) => {
@@ -30,10 +23,7 @@ export class StepExportRetargetedAnimations extends EventTarget {
     // Retarget all animation clips before export
     let retargeted_clips: AnimationClip[] = []
     retargeted_clips = this.animation_clips_to_export.map((clip) =>
-      AnimationRetargetService.getInstance().retarget_animation_clip(
-        clip,
-        this.bone_mapping
-      )
+      AnimationRetargetService.getInstance().retarget_animation_clip(clip)
     )
     console.log('Retargeted animation clips:', retargeted_clips)
 

@@ -13,8 +13,6 @@ export enum TargetBoneMappingType {
 }
 
 export class StepBoneMapping extends EventTarget {
-  private readonly _main_scene: Scene
-
   // DOM references
   private source_bones_list: HTMLDivElement | null = null
   private target_bones_list: HTMLDivElement | null = null
@@ -24,15 +22,10 @@ export class StepBoneMapping extends EventTarget {
   private target_bone_count: HTMLSpanElement | null = null
 
   // Bone mapping: target bone name (uploaded mesh) -> source bone name (Mesh2Motion skeleton)
-  private bone_mapping = new Map<string, string>()
+  // private bone_mapping = new Map<string, string>()
 
   // Track if event listeners have been added
   private has_added_event_listeners: boolean = false
-
-  constructor (main_scene: Scene) {
-    super()
-    this._main_scene = main_scene // might not need this, but keeping for now
-  }
 
   public begin (): void {
     // Get DOM references
@@ -81,11 +74,21 @@ export class StepBoneMapping extends EventTarget {
   }
 
   public has_source_skeleton (): boolean {
-    return AnimationRetargetService.getInstance().get_source_armature() !== null
+    // if the source armature is an empty Group, we consider it as not having a skeleton
+    if (AnimationRetargetService.getInstance().get_source_armature()?.children.length === 0) {
+      return false
+    }
+
+    return true
   }
 
   public has_target_skeleton (): boolean {
-    return AnimationRetargetService.getInstance().get_target_armature() !== null
+    // if the target armature has no children, we consider it as not having a skeleton
+    if (AnimationRetargetService.getInstance().get_target_armature()?.children.length === 0) {
+      return false
+    }
+
+    return true
   }
 
   public has_both_skeletons (): boolean {
@@ -115,8 +118,10 @@ export class StepBoneMapping extends EventTarget {
 
   // Extract bone names from target skeleton (uploaded mesh)
   public get_target_bone_names (): string[] {
-    const target_armature = AnimationRetargetService.getInstance().get_target_armature()
-    if (target_armature === null) {
+    const skinned_meshes: SkinnedMesh[] = AnimationRetargetService.getInstance().get_target_skinned_meshes()
+
+    if (skinned_meshes.length === 0) {
+      console.warn('get_target_bone_names(): No skinned meshes found in target armature.')
       return []
     }
 
@@ -127,14 +132,10 @@ export class StepBoneMapping extends EventTarget {
 
     // Target skeleton data contains SkinnedMesh objects with skeleton property
     // Use Set to avoid duplicates when multiple SkinnedMesh share the same skeleton
-    target_armature.traverse((child) => {
-      if (child.type === 'SkinnedMesh') {
-        const skinned_mesh = child as SkinnedMesh
-        const skeleton = skinned_mesh.skeleton
-        skeleton.bones.forEach((bone) => {
-          bone_names_set.add(bone.name)
-        })
-      }
+    skinned_meshes.forEach((skinned_mesh) => {
+      skinned_mesh.skeleton.bones.forEach((bone) => {
+        bone_names_set.add(bone.name)
+      })
     })
 
     return Array.from(bone_names_set).sort()
@@ -201,7 +202,8 @@ export class StepBoneMapping extends EventTarget {
       bone_item.dataset.targetBoneName = name
 
       // Check if this target bone has a mapping
-      const mapped_source_bone = this.bone_mapping.get(name)
+      const bone_mappings: Map<string, string> = AnimationRetargetService.getInstance().get_bone_mappings()
+      const mapped_source_bone = bone_mappings.get(name)
       if (mapped_source_bone !== undefined) {
         const source_name_span = document.createElement('span')
         source_name_span.textContent = mapped_source_bone
@@ -280,7 +282,9 @@ export class StepBoneMapping extends EventTarget {
 
       if (source_bone_name !== '' && target_bone_name !== undefined) {
         // Update the mapping
-        this.bone_mapping.set(target_bone_name, source_bone_name)
+        // this.bone_mapping.set(target_bone_name, source_bone_name)
+        AnimationRetargetService.getInstance().get_bone_mappings().set(target_bone_name, source_bone_name)
+
         console.log(`Mapped: ${target_bone_name} <- ${source_bone_name}`)
 
         // Update the UI to show the mapping
@@ -301,14 +305,9 @@ export class StepBoneMapping extends EventTarget {
     }
   }
 
-  // Getter for the bone mapping
-  public get_bone_mapping (): Map<string, string> {
-    return new Map(this.bone_mapping)
-  }
-
   // Check if there are any bone mappings
   public has_bone_mappings (): boolean {
-    return this.bone_mapping.size > 0
+    return AnimationRetargetService.getInstance().get_bone_mappings().size > 0
   }
 
   // Update visibility of clear mappings button
@@ -321,13 +320,14 @@ export class StepBoneMapping extends EventTarget {
   // Update visibility of auto-map button
   private update_auto_map_button_visibility (): void {
     if (this.auto_map_button === null) return
-
     this.auto_map_button.style.display = this.has_both_skeletons() ? 'block' : 'none'
   }
 
   // Clear a specific mapping
   public clear_bone_mapping (target_bone_name: string): void {
-    this.bone_mapping.delete(target_bone_name)
+    // this.bone_mapping.delete(target_bone_name)
+    AnimationRetargetService.getInstance().get_bone_mappings().delete(target_bone_name)
+
     this.update_target_bones_list()
     this.update_clear_button_visibility()
     this.dispatchEvent(new CustomEvent('bone-mappings-changed'))
@@ -335,7 +335,9 @@ export class StepBoneMapping extends EventTarget {
 
   // Clear all mappings
   public clear_all_bone_mappings (): void {
-    this.bone_mapping.clear()
+    // this.bone_mapping.clear()
+    AnimationRetargetService.getInstance().set_bone_mappings(new Map<string, string>())
+
     this.update_target_bones_list()
     this.update_clear_button_visibility()
     this.dispatchEvent(new CustomEvent('bone-mappings-changed'))
@@ -343,8 +345,7 @@ export class StepBoneMapping extends EventTarget {
 
   // Auto-map bones using string matching
   public auto_map_bones (): void {
-    // Clear existing mappings first
-    this.bone_mapping.clear()
+    this.clear_all_bone_mappings() // Clear existing mappings first
 
     // Check if we have both source and target skeletons
     if (!this.has_both_skeletons()) {
@@ -352,22 +353,23 @@ export class StepBoneMapping extends EventTarget {
       return
     }
 
+    const retarget_service: AnimationRetargetService = AnimationRetargetService.getInstance()
+
     // see if target bones follow a known template
     if (MixamoMapper.is_target_valid_skeleton(this.get_target_bone_names())) {
-      AnimationRetargetService.getInstance().set_target_mapping_type(TargetBoneMappingType.Mixamo)
+      retarget_service.set_target_mapping_type(TargetBoneMappingType.Mixamo)
     } else {
-      AnimationRetargetService.getInstance().set_target_mapping_type(TargetBoneMappingType.Custom)
+      retarget_service.set_target_mapping_type(TargetBoneMappingType.Custom)
     }
 
     // Use BoneAutoMapper to generate mappings
     const auto_mappings = BoneAutoMapper.auto_map_bones(
-      AnimationRetargetService.getInstance().get_target_armature(),
-      AnimationRetargetService.getInstance().get_target_mapping_type()
+      retarget_service.get_target_armature(),
+      retarget_service.get_target_mapping_type()
     )
 
     // Apply the auto-generated mappings
-    this.bone_mapping = auto_mappings
-
+    retarget_service.set_bone_mappings(auto_mappings)
     console.log(`Auto-mapped ${auto_mappings.size} bones:`, auto_mappings)
 
     // Update UI

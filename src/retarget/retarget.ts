@@ -37,13 +37,10 @@ class RetargetModule {
     this.step_load_target_model = new StepLoadTargetModel(this.mesh2motion_engine)
 
     // Initialize bone mapping step
-    this.step_bone_mapping = new StepBoneMapping(this.mesh2motion_engine.get_scene())
+    this.step_bone_mapping = new StepBoneMapping()
 
     // Initialize animation preview
-    this.retarget_animation_preview = new RetargetAnimationPreview(
-      this.mesh2motion_engine.get_scene(),
-      this.step_bone_mapping
-    )
+    this.retarget_animation_preview = new RetargetAnimationPreview(this.step_bone_mapping)
   }
 
   public init (): void {

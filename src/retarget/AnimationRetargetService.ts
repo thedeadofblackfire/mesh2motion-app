@@ -26,8 +26,18 @@ export class AnimationRetargetService {
   private source_armature: Group = new Group()
   private skeleton_type: SkeletonType = SkeletonType.None
   private target_armature: Scene = new Scene()
+
   private target_skinned_meshes: SkinnedMesh[] = []
   private target_mapping_type: TargetBoneMappingType = TargetBoneMappingType.None
+  private bone_mappings: Map<string, string> = new Map<string, string>()
+
+  public set_bone_mappings (mappings: Map<string, string>): void {
+    this.bone_mappings = mappings
+  }
+
+  public get_bone_mappings (): Map<string, string> {
+    return this.bone_mappings
+  }
 
   public set_source_armature (armature: Group): void {
     this.source_armature = armature
@@ -77,6 +87,8 @@ export class AnimationRetargetService {
 
   private constructor () {}
 
+  // #region PUBLIC METHODS
+
   public static getInstance (): AnimationRetargetService {
     if (AnimationRetargetService.instance === null) {
       AnimationRetargetService.instance = new AnimationRetargetService()
@@ -90,10 +102,7 @@ export class AnimationRetargetService {
    * @param bone_mappings - Map of target bone name -> source bone name
    * @returns A new animation clip retargeted for the target skeleton
    */
-  public retarget_animation_clip (
-    source_clip: AnimationClip,
-    bone_mappings: Map<string, string>
-  ): AnimationClip {
+  public retarget_animation_clip (source_clip: AnimationClip): AnimationClip {
     const new_tracks: any[] = [] // store new retargeted tracks
 
     // Process each track in the source animation
@@ -106,7 +115,7 @@ export class AnimationRetargetService {
       }
 
       // Check if this bone is mapped to any target bones
-      const target_bone_names = this.reverse_bone_mapping(bone_mappings).get(track_parts.bone_name)
+      const target_bone_names = this.reverse_bone_mapping(this.bone_mappings).get(track_parts.bone_name)
       if (target_bone_names === undefined || target_bone_names.length === 0) {
         return // Skip unmapped bones
       }
@@ -134,14 +143,17 @@ export class AnimationRetargetService {
     // Apply Mixamo-specific corrections if needed
     if (this.target_mapping_type === TargetBoneMappingType.Mixamo) {
       this.apply_bone_rotation_correction(
-        retargeted_clip,
-        bone_mappings
+        retargeted_clip
       )
     }
 
     console.log(`Retargeted animation: ${source_clip.name} (${new_tracks.length} tracks)`)
     return retargeted_clip
   }
+
+  // #endregion
+
+  // #region PRIVATE METHODS
 
   /**
    * Create a reverse mapping: source bone name -> array of target bone names
@@ -164,10 +176,9 @@ export class AnimationRetargetService {
    * Apply bone rotation correction for fixing bone roll delta between target and source skeleton
    */
   private apply_bone_rotation_correction (
-    animation_clip: AnimationClip,
-    bone_mappings: Map<string, string>
+    animation_clip: AnimationClip
   ): void {
-    bone_mappings.forEach((source_bone_name, target_bone_name) => {
+    this.bone_mappings.forEach((source_bone_name, target_bone_name) => {
       const delta = this.calculate_bone_rotation_delta(
         source_bone_name,
         target_bone_name
@@ -328,4 +339,5 @@ export class AnimationRetargetService {
 
     return null
   }
+  // #endregion
 }
