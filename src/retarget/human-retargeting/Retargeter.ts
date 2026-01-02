@@ -40,15 +40,24 @@ export class Retargeter {
 
     // Compute vectors from animation source
     // then align target joints to it
-    this.applyScaledTranslation('pelvis') // apply position scaling for hips
-    this.applyChain('pelvis')
+    this.applyScaledTranslation('pelvis')
     this.applyEndInterp('spine')
-    this.applyChain('head')
+    this.applyEndInterp('head')
+    this.applyEndInterp('armL')
+    this.applyEndInterp('armR')
+    this.applyEndInterp('legL')
+    this.applyEndInterp('legR')
 
-    this.applyChain('armL')
-    this.applyChain('armR')
-    this.applyChain('legL')
-    this.applyChain('legR')
+    // TODO: Figure out why the applyChain() version is doing nothing
+    // this.applyScaledTranslation('pelvis') // apply position scaling for hips
+    // this.applyChain('pelvis')
+    // this.applyEndInterp('spine')
+    // this.applyChain('head')
+
+    // this.applyChain('armL')
+    // this.applyChain('armR')
+    // this.applyChain('legL')
+    // this.applyChain('legR')
 
     // Run Additives if any exist
     for (const i of this.additives) {
@@ -155,14 +164,17 @@ export class Retargeter {
       )
       tracks.push(quat_track)
 
-      // TODO: Add this logic later to include root motion if correct bone
-      // Create position track
-      // const pos_track = new THREE.VectorKeyframeTrack(
-      //   `${bone_name}.position`,
-      //   data.times,
-      //   data.positions
-      // )
-      // tracks.push(pos_track)
+      // add root motion track
+      // TODO: this needs to be a bit smarter to know which track
+      // has the root bone (hard-coding where Mixamo stores root motion)
+      if (bone_name.toLowerCase().trim().includes('hips')) {
+        const pos_track = new THREE.VectorKeyframeTrack(
+          `${bone_name}.position`,
+          data.times,
+          data.positions
+        )
+        tracks.push(pos_track)
+      }
     })
 
     console.log(`Baked ${frame_count} frames for ${this.tarRig.skel.bones.length} bones (${tracks.length} tracks)`)
