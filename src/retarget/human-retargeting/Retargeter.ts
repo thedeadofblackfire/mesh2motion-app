@@ -170,8 +170,13 @@ export class Retargeter {
     return tracks
   }
 
-  // Apply SwingTwist to each joint of a chain, 1 to 1 mappings
-  // k = chain key like 'pelvis', 'armL', etc
+  /**
+   * Retargets a whole chain of bones (like an arm or leg) by matching the swing and twist
+   * orientation of each source bone to its corresponding target bone, one-to-one, along the chain.
+   * Apply SwingTwist to each joint of a chain, 1 to 1 mappings
+   * @param k chain key like 'pelvis', 'armL', etc
+   * @returns nothing
+   */
   public applyChain (k: string): void {
     const src: RigItem[] = this.srcRig.chains[k]
     const tar: RigItem[] = this.tarRig.chains[k]
@@ -180,10 +185,12 @@ export class Retargeter {
       return
     }
 
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    // const cnt = src.length
+    // Setup ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    const cnt = src.length
+    const vec: THREE.Vector3 = new THREE.Vector3() // we will copy position data into this
+    const quat: THREE.Quaternion = new THREE.Quaternion() // we will copy rotation data into this
 
-    // const p = new Vec3()
+    const p = new Vec3()
     const source_position: Vec3 = new Vec3()
     const source_rotation: Quat = new Quat()
     const target_rotation: Quat = new Quat()
@@ -197,21 +204,20 @@ export class Retargeter {
     const parent_transform: Transform = new Transform()
     const current_transform: Transform = new Transform()
 
-    let bone: THREE.Bone
-    let joint: Joint
+    let bone: THREE.Bone | null = null
+    let joint: Joint | null = null
 
-    const vec: Vec3 = new Vec3() // we will copy position data into this
-    const quat: Quat = new Quat() // we will copy rotation data into this
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
     for (let i = 0; i < src.length; i++) {
-      // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       // Get source swing / twist vectors
       // Pose exists in 3JS skeleton, so need to get its
       // Data through 3JS methods
       bone = this.srcRig.skel.bones[src[i].idx]
-      bone.getWorldPosition(new THREE.Vector3(vec.x, vec.y, vec.z))
-      bone.getWorldQuaternion(new THREE.Quaternion(quat.x, quat.y, quat.z, quat.w))
-      source_position.copyTo(vec)
-      source_rotation.copyTo(quat)
+      bone.getWorldPosition(vec)
+      bone.getWorldQuaternion(quat)
+      source_position.copyTo(new Vec3(vec.x, vec.y, vec.z))
+      source_rotation.copyTo(new Quat(quat.x, quat.y, quat.z, quat.w))
 
       source_swing.fromQuat(source_rotation, src[i].swing)
       source_twist.fromQuat(source_rotation, src[i].twist)
@@ -259,7 +265,13 @@ export class Retargeter {
     }
   }
 
-  // Interp start & end SwingTwist vectors over a chain
+  /**
+   * Retargets a chain by interpolating the swing and twist vectors only at the ends of the chain,
+   * then smoothly blending (lerping) these vectors for the intermediate joints.
+   * @param k chain key like 'spine', etc
+   * @returns void
+   */
+  // Interpolate start & end SwingTwist vectors over a chain
   // k = chain key like 'spine', etc
   public applyEndInterp (k: string): void {
     if (this.srcRig === null || this.tarRig === null || this.pose === null) {
@@ -273,6 +285,7 @@ export class Retargeter {
     if (src === null || tar === null) return
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Source rig start & end tranforms and associated swing/twist vectors
     const aTran: Transform = this.getWorld(this.srcRig.skel, src[0].idx)
     const aSwing: Vec3 = new Vec3().fromQuat(aTran.rot, src[0].swing)
     const aTwist: Vec3 = new Vec3().fromQuat(aTran.rot, src[0].twist)
@@ -295,9 +308,10 @@ export class Retargeter {
     const target_twist: Vec3 = new Vec3()
     const rig_items_count: number = tar.length - 1
     let itm: RigItem
-    let t: number // 0-1 lerp factor for chain
+    let t: number // 0-1 lerp (interpolation) factor for chain
 
     for (let i = 0; i <= rig_items_count; i++) {
+      // evenly spaced bones along the chain
       t = i / rig_items_count
       itm = tar[i]
 
@@ -379,18 +393,28 @@ export class Retargeter {
     return trans
   }
 
-  // Make a rotation's invert directions match the target directions
-  // Create neutral transfroms for each joint as a starting point
-  // which is the current pose's parent joint worldspace transform applied
-  // to the local space tpose transform of the joint.
-  // This gives the transform of the joint as if itself has not change
-  // but its heirarchy has.
-  public applySwingTwist (itm: RigItem, tSwing: Vec3, tTwist: Vec3, tpose: Pose, pose: Pose): Quat {
+  /**
+   * Make a rotation's invert directions match the target directions
+   * Create neutral transfroms for each joint as a starting point
+   * which is the current pose's parent joint worldspace transform applied
+   * to the local space tpose transform of the joint.
+   * This gives the transform of the joint as if itself has not change but its heirarchy has.
+   * This ensures the joint's orientation matches both swing and twist vectors from the source animation,
+   * producing natural retargeted motion for the target skeleton.
+   *
+   * @param rig_item        RigItem for the target joint (contains swing/twist axes)
+   * @param tar_swing_dir   Target swing direction vector (from source animation)
+   * @param tar_twist_dir   Target twist direction vector (from source animation)
+   * @param tpose           Target skeleton's t-pose
+   * @param current_pose    Current working pose for the target skeleton
+   * @returns               Quaternion representing the final local-space rotation for the joint
+   */
+  public applySwingTwist (rig_item: RigItem, tar_swing_dir: Vec3, tar_twist_dir: Vec3, tpose: Pose, current_pose: Pose): Quat {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Compute Neutral Transform of the joint
     // curentPose.parentJoint.world.rot * tPose.joint.local.rot
-    const j: Joint = tpose.joints[itm.idx]
-    const ptran: Transform = pose.getWorld(j.pindex) // Get WS of current pose of parent joint
+    const j: Joint = tpose.joints[rig_item.idx]
+    const ptran: Transform = current_pose.getWorld(j.pindex) // Get WS of current pose of parent joint
     const ctran: Transform = new Transform().fromMul(ptran, j.local) // Apply to Tpose's locaa for neutral rotation
     const dir: Vec3 = new Vec3()
     const source_rot: Quat = new Quat()
@@ -398,14 +422,14 @@ export class Retargeter {
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // SWING
-    dir.fromQuat(ctran.rot, itm.swing) // Get Worldspace direction
-    source_rot.fromSwing(dir, tSwing) // Compute rot current dir to target dir
+    dir.fromQuat(ctran.rot, rig_item.swing) // Get Worldspace direction
+    source_rot.fromSwing(dir, tar_swing_dir) // Compute rot current dir to target dir
       .mul(ctran.rot) // PMul result to neutral rotation
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Twist
-    dir.fromQuat(source_rot, itm.twist) // Get WS twist direction after swring rotation
-    target_rot.fromSwing(dir, tTwist) // Compute rot to make twist vectors match
+    dir.fromQuat(source_rot, rig_item.twist) // Get WS twist direction after swring rotation
+    target_rot.fromSwing(dir, tar_twist_dir) // Compute rot to make twist vectors match
       .mul(source_rot) // twist * ( swing * neutral )
       .pmulInvert(ptran.rot) // To Localspace
 
