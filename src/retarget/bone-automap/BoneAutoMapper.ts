@@ -51,10 +51,7 @@ export class BoneAutoMapper {
    * @param target_armature - Target skeleton armature (uploaded mesh)
    * @returns Map of target bone name -> source bone name
    */
-  public static auto_map_bones (
-    target_armature: Scene,
-    target_bone_mapping_type: TargetBoneMappingType
-  ): Map<string, string> {
+  public static auto_map_bones (): Map<string, string> {
     // mappings: final output mapping of target bone name to source bone name
     let mappings = new Map<string, string>()
 
@@ -84,7 +81,7 @@ export class BoneAutoMapper {
 
     // if the target is a mixamo rig and our skeleton type is human, we can do a direct name mapping
     // without worrying about guessing
-    if (target_bone_mapping_type === TargetBoneMappingType.Mixamo) {
+    if (retarget_service.get_target_mapping_type() === TargetBoneMappingType.Mixamo) {
       console.log('Target skeleton appears to be a Mixamo rig, performing direct name mapping...')
       mappings = MixamoMapper.map_mixamo_bones(source_bones_meta, target_bones_meta)
       return mappings

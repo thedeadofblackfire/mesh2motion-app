@@ -20,6 +20,7 @@ export class StepBoneMapping extends EventTarget {
   private auto_map_button: HTMLButtonElement | null = null
   private source_bone_count: HTMLSpanElement | null = null
   private target_bone_count: HTMLSpanElement | null = null
+  private auto_bone_map_match_display: HTMLSpanElement | null = null
 
   // Bone mapping: target bone name (uploaded mesh) -> source bone name (Mesh2Motion skeleton)
   // private bone_mapping = new Map<string, string>()
@@ -33,6 +34,9 @@ export class StepBoneMapping extends EventTarget {
     this.target_bones_list = document.getElementById('target-bones-list') as HTMLDivElement
     this.clear_mappings_button = document.getElementById('clear-mappings-button') as HTMLButtonElement
     this.auto_map_button = document.getElementById('auto-map-button') as HTMLButtonElement
+
+    // if we get a match, show what type of match we got on the UI for feedback
+    this.auto_bone_map_match_display = document.getElementById('auto-bone-map-match') as HTMLSpanElement
 
     // for display only on the bones list for reference
     this.source_bone_count = document.getElementById('source-bone-count') as HTMLSpanElement
@@ -318,6 +322,23 @@ export class StepBoneMapping extends EventTarget {
     this.clear_mappings_button.style.display = this.has_bone_mappings() ? 'block' : 'none'
   }
 
+  // Show what type of auto-mapping match we got on the UI
+  private update_bone_match_type_display (): void {
+    if (this.auto_bone_map_match_display === null) return
+
+    const mapping_type: TargetBoneMappingType = AnimationRetargetService.getInstance().get_target_mapping_type()
+
+    if (mapping_type === TargetBoneMappingType.Mixamo) {
+      this.auto_bone_map_match_display.style.display = 'inline-flex'
+      this.auto_bone_map_match_display.textContent = '✨Mixamo'
+    } else if (mapping_type === TargetBoneMappingType.Mesh2Motion) {
+      this.auto_bone_map_match_display.style.display = 'inline-flex'
+      this.auto_bone_map_match_display.textContent = '🚀Mesh2Motion'
+    } else {
+      this.auto_bone_map_match_display.style.display = 'none'
+    }
+  }
+
   // Update visibility of auto-map button
   private update_auto_map_button_visibility (): void {
     if (this.auto_map_button === null) return
@@ -331,6 +352,7 @@ export class StepBoneMapping extends EventTarget {
 
     this.update_target_bones_list()
     this.update_clear_button_visibility()
+    this.update_bone_match_type_display()
     this.dispatchEvent(new CustomEvent('bone-mappings-changed'))
   }
 
@@ -341,6 +363,7 @@ export class StepBoneMapping extends EventTarget {
 
     this.update_target_bones_list()
     this.update_clear_button_visibility()
+    this.update_bone_match_type_display()
     this.dispatchEvent(new CustomEvent('bone-mappings-changed'))
   }
 
@@ -364,10 +387,7 @@ export class StepBoneMapping extends EventTarget {
     }
 
     // Use BoneAutoMapper to generate mappings
-    const auto_mappings = BoneAutoMapper.auto_map_bones(
-      retarget_service.get_target_armature(),
-      retarget_service.get_target_mapping_type()
-    )
+    const auto_mappings = BoneAutoMapper.auto_map_bones()
 
     // Apply the auto-generated mappings
     retarget_service.set_bone_mappings(auto_mappings)
@@ -376,6 +396,7 @@ export class StepBoneMapping extends EventTarget {
     // Update UI
     this.update_target_bones_list()
     this.update_clear_button_visibility()
+    this.update_bone_match_type_display()
     this.dispatchEvent(new CustomEvent('bone-mappings-changed'))
   }
 }
