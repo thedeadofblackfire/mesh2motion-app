@@ -42,22 +42,48 @@ export class Rig {
           this.buildRigScalar(k)
           break
         case 'spine' :
+          // Swing: points up (Y+), Twist: forward (Z+)
           this.buildItem(k, chain_names, new Vec3(0, 1, 0), new Vec3(0, 0, 1))
           break
         case 'head' :
           this.buildItem(k, chain_names, new Vec3(0, 0, 1), new Vec3(0, 1, 0))
           break
         case 'armL' :
+          // Swing: points left (X+), Twist: back (Z-)
           this.buildItem(k, chain_names, new Vec3(1, 0, 0), new Vec3(0, 0, -1))
           break
         case 'armR' :
+          // Swing: points right (X-), Twist: back (Z-)
           this.buildItem(k, chain_names, new Vec3(-1, 0, 0), new Vec3(0, 0, -1))
           break
         case 'legL' :
+        case 'legR' :
+          // Both Legs pointing down and twist in same direction
+          // Swing: forward (Z+), Twist: down (Y-)
           this.buildItem(k, chain_names, new Vec3(0, 0, 1), new Vec3(0, -1, 0))
           break
-        case 'legR' :
-          this.buildItem(k, chain_names, new Vec3(0, 0, 1), new Vec3(0, -1, 0))
+        case 'fingersThumbL' :
+          // Thumb points more forward/outward
+          this.buildItem(k, chain_names, new Vec3(0.5, 0, 0.866), new Vec3(0, -1, 0))
+          break
+        case 'fingersIndexL' :
+        case 'fingersMiddleL' :
+        case 'fingersRingL' :
+        case 'fingersPinkyL' :
+          // Fingers extend similar to left arm
+          this.buildItem(k, chain_names, new Vec3(1, 0, 0), new Vec3(0, 0, -1))
+          break
+        // Right hand fingers
+        case 'fingersThumbR' :
+          // Thumb points more forward/outward (mirrored)
+          this.buildItem(k, chain_names, new Vec3(-0.5, 0, 0.866), new Vec3(0, -1, 0))
+          break
+        case 'fingersIndexR' :
+        case 'fingersMiddleR' :
+        case 'fingersRingR' :
+        case 'fingersPinkyR' :
+          // Fingers extend forward from palm (mirrored twist)
+          this.buildItem(k, chain_names, new Vec3(-1, 0, 0), new Vec3(0, 0, -1))
           break
       }
     }
@@ -65,6 +91,15 @@ export class Rig {
   }
 
   // k = chain key like 'pelvis', 'armL', etc
+
+  /**
+   * Builds a rig item chain for a given key using the provided joint names, swing, and twist vectors.
+   * @param k - The key representing the chain (e.g., 'pelvis', 'armL').
+   * @param names - An array of joint names to be included in the chain.
+   * @param swing - The swing vector for the joints in the chain.
+   * @param twist - The twist vector for the joints in the chain.
+   * @returns The current Rig instance for chaining.
+   */
   buildItem (k: string, names: string[], swing: Vec3, twist: Vec3): this {
     const rig_items: RigItem[] = []
     let j

@@ -39,16 +39,6 @@ export class Retargeter {
     this.mixer.update(delta_time)
 
     // Compute vectors from animation source
-    // then align target joints to it
-    // this.applyScaledTranslation('pelvis')
-    // this.applyEndInterp('spine')
-    // this.applyEndInterp('head')
-    // this.applyEndInterp('armL')
-    // this.applyEndInterp('armR')
-    // this.applyEndInterp('legL')
-    // this.applyEndInterp('legR')
-
-    // TODO: Figure out why the applyChain() version is doing nothing
     this.applyScaledTranslation('pelvis') // apply position scaling for hips
     this.applyChain('pelvis')
     this.applyEndInterp('spine')
@@ -58,6 +48,18 @@ export class Retargeter {
     this.applyChain('armR')
     this.applyChain('legL')
     this.applyChain('legR')
+
+    // fingers
+    this.applyChain('fingersThumbL')
+    this.applyChain('fingersThumbR')
+    this.applyChain('fingersIndexL')
+    this.applyChain('fingersIndexR')
+    this.applyChain('fingersMiddleL')
+    this.applyChain('fingersMiddleR')
+    this.applyChain('fingersRingL')
+    this.applyChain('fingersRingR')
+    this.applyChain('fingersPinkyL')
+    this.applyChain('fingersPinkyR')
 
     // Run Additives if any exist
     for (const i of this.additives) {
