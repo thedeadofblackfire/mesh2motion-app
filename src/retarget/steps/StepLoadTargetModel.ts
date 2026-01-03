@@ -80,26 +80,31 @@ export class StepLoadTargetModel extends EventTarget {
           const retargetable_meshes: Scene = this.mesh2motion_engine.load_model_step.get_final_retargetable_model_data()
           const is_valid_skinned_mesh = RetargetUtils.validate_skinned_mesh_has_bones(retargetable_meshes)
           if (is_valid_skinned_mesh) {
-            console.log('adding retargetable meshes to scene for retargeting')
-
             // we have valid skinned mesh(s). The could be very large though,
             // we let's check to see how large everything is
             const bounding_box = new Box3().setFromObject(retargetable_meshes)
             const size = new Vector3()
             bounding_box.getSize(size)
-            console.log('Retargetable meshes bounding box size:', size)
-            console.log('Skinned mesh data to inspect:', retargetable_meshes)
+            // console.log('Retargetable meshes bounding box size:', size)
+            // console.log('Skinned mesh data to inspect:', retargetable_meshes)
 
             RetargetUtils.reset_skinned_mesh_to_rest_pose(retargetable_meshes)
             this.mesh2motion_engine.get_scene().add(retargetable_meshes)
-
-            // if we are too large, scale down the model to fit better
             const largest_dimension: number = this.calculate_max_mesh_dimension(retargetable_meshes)
-            if (largest_dimension > 7) {
-              const scale_factor = 0.99
-              this.scale_skinned_meshes_to_fit_viewport(retargetable_meshes, scale_factor)
-              this.move_skinned_meshes_to_ground(retargetable_meshes)
+
+            // TODO: potential idea to fix. the M2M animations have a position offset for hips to root
+            // but this probably isn't being applied with the object scaling somehow?
+            if (largest_dimension > 40) {
+              new ModalDialog('Large Rig Warning',
+                `The model you imported is large (${largest_dimension.toFixed(1)} meters). Mesh2Motion expects 1 unit = 1 meter. Your model will be scaled down. This will affect the retargeted animation results. This warning will go away whenever the developer can figure out how to correctly handle issues with.`).show()
+              retargetable_meshes.scale.set(0.01, 0.01, 0.01) // common case with 3d creation tools that use 1 cm = 1 unit
             }
+            // if we are too large, scale down the model to fit better
+            // if (largest_dimension > 7) {
+            //   const scale_factor = 0.99
+            //   this.scale_skinned_meshes_to_fit_viewport(retargetable_meshes, scale_factor)
+            //   this.move_skinned_meshes_to_ground(retargetable_meshes)
+            // }
 
             // Adjust camera based on model size
             // this.adjust_camera_for_model(retargetable_meshes)

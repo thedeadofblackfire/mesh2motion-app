@@ -11,7 +11,7 @@ const _matrixWorldInv = /*@__PURE__*/ new Matrix4()
 
 class CustomSkeletonHelper extends LineSegments {
   private readonly joint_points: Points
-  private readonly jointTexture = new TextureLoader().load('images/skeleton-joint-point.png')
+  private readonly jointTexture = new TextureLoader().load('/images/skeleton-joint-point.png')
 
   constructor (object: any, options = {}) {
     const bones = getBoneList(object)
