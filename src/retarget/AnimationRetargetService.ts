@@ -33,7 +33,7 @@ export class AnimationRetargetService {
   private target_armature: Scene = new Scene()
 
   private target_skinned_meshes: SkinnedMesh[] = []
-  private target_mapping_type: TargetBoneMappingType = TargetBoneMappingType.None
+  private target_mapping_type: TargetBoneMappingType = TargetBoneMappingType.Custom
   private bone_mappings: Map<string, string> = new Map<string, string>()
 
   public set_bone_mappings (mappings: Map<string, string>): void {
@@ -109,12 +109,18 @@ export class AnimationRetargetService {
   public retarget_animation_clip (source_clip: AnimationClip): AnimationClip {
     const new_tracks: any[] = [] // store new retargeted tracks
 
+    // if there are no bone mappings, return the source clip as there is nothing to retarget
+    if (this.bone_mappings.size === 0) {
+      console.warn('No bone mappings available for retargeting. Returning source clip as-is.')
+      return source_clip
+    }
+
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // if the source skeleton is of type human and the target mapping is Mixamo,
     // we can try to apply the new Human Retarger system to do the retargeting
-    if (this.skeleton_type === SkeletonType.Human && this.target_mapping_type === TargetBoneMappingType.Mixamo) {
-      console.log('Using Human Retargeter for retargeting animation clip:', source_clip.name)
-      return this.apply_swing_twist_retargeting(source_clip)
+    if (this.skeleton_type === SkeletonType.Human) {
+      console.log('Using Human Retargeter for retargeting animation clip:', source_clip.name, this.target_mapping_type)
+      return this.apply_human_swing_twist_retargeting(source_clip, this.target_mapping_type)
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -164,7 +170,7 @@ export class AnimationRetargetService {
 
   // #region PRIVATE METHODS
 
-  private apply_swing_twist_retargeting (source_clip: AnimationClip): AnimationClip {
+  private apply_human_swing_twist_retargeting (source_clip: AnimationClip, target_mapping_type: TargetBoneMappingType): AnimationClip {
     // the retargeter needs Skeleton inputs fot both source and target.
     // the source armature is a Group, so we need to convert to a THREE.Skeleton before we can continue
     const source_skeleton: Skeleton | null = this.create_skeleton_from_source(this.source_armature)
@@ -175,10 +181,22 @@ export class AnimationRetargetService {
 
     // create a custom "Rig" for the source and the target skeletons
     const source_rig: Rig = new Rig(source_skeleton)
-    source_rig.fromConfig(HumanChainConfig.mesh2motion_config)
-
     const target_rig: Rig = new Rig(this.target_skinned_meshes[0].skeleton)
-    target_rig.fromConfig(HumanChainConfig.mixamo_config)
+
+
+    // if it is a known bone mapping, we can grab the preset config
+    // if not, we will need to manually build the config from the bone mappings
+    if (target_mapping_type === TargetBoneMappingType.Mixamo) {
+      source_rig.fromConfig(HumanChainConfig.mesh2motion_config)
+      target_rig.fromConfig(HumanChainConfig.mixamo_config)
+    } else if (target_mapping_type === TargetBoneMappingType.Custom) {
+      const custom_source_config = HumanChainConfig.build_custom_source_config(this.get_bone_mappings())
+      const custom_target_config = HumanChainConfig.build_custom_target_config(custom_source_config, this.get_bone_mappings())
+
+      // set the custom rigs from the generated configs
+      source_rig.fromConfig(custom_source_config)
+      target_rig.fromConfig(custom_target_config)
+    }
 
     const retargeter: Retargeter = new Retargeter(source_rig, target_rig, source_clip)
 

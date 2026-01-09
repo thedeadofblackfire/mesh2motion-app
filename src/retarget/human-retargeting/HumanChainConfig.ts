@@ -1,3 +1,5 @@
+
+
 export class HumanChainConfig {
   // Master list of human bone/joint names that we can use and part of the Mesh2Motion rig
   // this will always be the source config we start with for retargeting
@@ -51,4 +53,72 @@ export class HumanChainConfig {
 
   // then we can duplicate that source config to a target config. We can go through the bone
   // mapping and swap out all the source bone names for the target bone names
+
+  public static build_custom_source_config (bone_mapping: Map<string, string>): Record<string, string[]> {
+    // we will bring in the bones that are mapped
+    const base_source_config = structuredClone(HumanChainConfig.mesh2motion_config)
+    const flat_source_bone_names: string = this.flat_bone_name_list(bone_mapping.values()) // values store the Mesh2Motion bones
+
+    // TODO: Go through each chain and bone. If the bone has a bone mapping, keep it, if not, replace the value with an empty string
+    for (const chain_name in base_source_config) {
+      const bone_names_in_chain = base_source_config[chain_name]
+      for (let i = 0; i < bone_names_in_chain.length; i++) {
+        const bone_name = bone_names_in_chain[i]
+        if (!flat_source_bone_names.includes(bone_name)) {
+          // no mapping for this bone, so we will replace it with an empty string
+          bone_names_in_chain[i] = ''
+        }
+      }
+    }
+
+    console.log('Custom Source Config has been CREATED!!!:', base_source_config)
+
+    return base_source_config
+  }
+
+  /**
+   * To speed up finding bones in the list of chains and list of bones, flatten everything for faster searching
+   * @param bone_config
+   * @returns string of all the bone names separated by commas
+   */
+  private static flat_bone_name_list (bones_list: MapIterator<string>): string {
+    let easy_searchable_bone_names: string = ''
+
+    // flatten all keys (source bone names)
+    for (const key of bones_list) {
+      easy_searchable_bone_names += key + ','
+    }
+    return easy_searchable_bone_names
+  }
+
+  public static build_custom_target_config (source_config: Record<string, string[]>, bone_mapping: Map<string, string>): Record<string, string[]> {
+    // swap the keys with value since it puts the Mesh2Motion bone names as values
+    const reverse_bone_mapping = new Map(Array.from(bone_mapping.entries()).map(([key, value]) => [value, key]))
+
+    // our source config will only have the bones that need to be mapped. Non-mapped bones will be empty strings
+    const custom_target_config: Record<string, string[]> = structuredClone(source_config)
+
+    // we can go through each chain and bone in the source config. If there is no bone mapping done, we want to replace it with an empty string
+    // we will have to later update the retargeting algorithm to handle bones that are effectively skipped
+    for (const chain_name in custom_target_config) {
+      const bone_names = custom_target_config[chain_name]
+      for (let i = 0; i < bone_names.length; i++) {
+        const source_bone_name = bone_names[i]
+
+        if (source_bone_name === '') { continue } // no source bone name, so skip it
+
+        // update bone with mapped target bone name
+        const target_bone_name = reverse_bone_mapping.get(source_bone_name)
+        if (target_bone_name !== undefined) {
+          bone_names[i] = target_bone_name
+        } else {
+          console.warn('No target bone mapping found for source bone. This should NOT happen:', source_bone_name)
+          bone_names[i] = ''
+        }
+      }
+    }
+
+    console.log('Custom Target Config has been CREATED!!!:', custom_target_config)
+    return custom_target_config
+  }
 }
