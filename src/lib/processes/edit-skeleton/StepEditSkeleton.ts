@@ -137,10 +137,6 @@ export class StepEditSkeleton extends EventTarget {
 
     this.update_bind_button_text()
 
-    // set default skinning algorithm based on first option
-    const selection = this.ui.dom_skinning_algorithm_selection?.value
-    this.skinning_algorithm = this.convert_skinning_algorithm_to_enum(selection)
-
     // Don't add event listeners again if we are navigating back to this step
     if (!this._added_event_listeners) {
       this.add_event_listeners()
@@ -264,11 +260,6 @@ export class StepEditSkeleton extends EventTarget {
       })
     }
 
-    this.ui.dom_skinning_algorithm_selection?.addEventListener('change', (event) => {
-      const selection = event.target.value
-      this.skinning_algorithm = this.convert_skinning_algorithm_to_enum(selection)
-    })
-
     this.ui.dom_enable_skin_debugging?.addEventListener('change', (event) => {
       this.show_debug = event.target.checked
       this.update_bind_button_text()
@@ -334,17 +325,6 @@ export class StepEditSkeleton extends EventTarget {
     }
   }
 
-  private convert_skinning_algorithm_to_enum (value: string): SkinningFormula {
-    switch (value) {
-      case 'closest-distance-targeting':
-        return SkinningFormula.DistanceChildTargeting
-      case 'closest-bone-child':
-        return SkinningFormula.DistanceChild
-    }
-
-    return SkinningFormula.Distance // default if other two don't match
-  }
-
   private remove_event_listeners (): void {
     if (this.ui.dom_move_to_origin_button !== null) {
       this.ui.dom_move_to_origin_button.removeEventListener('click', () => {})
@@ -356,10 +336,6 @@ export class StepEditSkeleton extends EventTarget {
 
     if (this.ui.dom_mirror_skeleton_checkbox !== null) {
       this.ui.dom_mirror_skeleton_checkbox.removeEventListener('change', () => {})
-    }
-
-    if (this.ui.dom_skinning_algorithm_selection !== null) {
-      this.ui.dom_skinning_algorithm_selection.removeEventListener('change', () => {})
     }
 
     if (this.ui.dom_enable_skin_debugging !== null) {

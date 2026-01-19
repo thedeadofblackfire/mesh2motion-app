@@ -93,10 +93,8 @@ export class EventListeners {
     })
 
     this.bootstrap.ui.dom_bind_pose_button?.addEventListener('click', () => {
-      const passed_bone_skinning_test = this.bootstrap.test_bone_weighting_success()
-      if (passed_bone_skinning_test) {
-        this.bootstrap.process_step_changed(ProcessStep.BindPose)
-      }
+      this.bootstrap.setup_weight_skinning_config()
+      this.bootstrap.process_step_changed(ProcessStep.BindPose)
     })
 
     // rotate model after loading it in to orient it correctly

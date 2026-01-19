@@ -46,7 +46,6 @@ export class UI {
   dom_preview_plane_height_label: HTMLElement | null = null
   dom_preview_plane_setting_container: HTMLElement | null = null
 
-  dom_skinning_algorithm_selection: HTMLElement | null = null
   dom_skinned_mesh_tools: HTMLElement | null = null
   dom_skinned_mesh_animation_tools: HTMLElement | null = null
   dom_show_skeleton_checkbox: HTMLInputElement | null = null
@@ -146,7 +145,6 @@ export class UI {
     this.dom_bind_pose_button = document.querySelector('#action_bind_pose')
     // this.dom_scale_skeleton_input_box = document.querySelector('#scale-input')
     this.dom_move_to_origin_button = document.querySelector('#action_move_to_origin')
-    this.dom_skinning_algorithm_selection = document.querySelector('#skinning-algorithm-options')
 
     this.dom_mesh_preview_group = document.querySelector('#mesh-preview-group')
 

@@ -41,13 +41,12 @@ export class StepWeightSkin extends EventTarget {
 
   public begin (): void { }
 
-  public create_bone_formula_object (editable_armature: Object3D, skinning_formula: string, skeleton_type: SkeletonType): AbstractAutoSkinSolver | null {
+  public create_bone_formula_object (editable_armature: Object3D, skeleton_type: SkeletonType): AbstractAutoSkinSolver | null {
     this.skinning_armature = editable_armature.clone()
     this.skinning_armature.name = 'Armature for skinning'
 
-    if (skinning_formula === SkinningFormula.DistanceChildTargeting) {
-      this.bone_skinning_formula = new SolverDistanceChildTargeting(this.skinning_armature.children[0], skeleton_type)
-    }
+    // we only use one skinning formula for now
+    this.bone_skinning_formula = new SolverDistanceChildTargeting(this.skinning_armature.children[0], skeleton_type)
 
     return this.bone_skinning_formula ?? null
   }

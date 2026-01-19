@@ -545,8 +545,7 @@ export class Mesh2MotionEngine {
     this.weight_skin_step.reset_all_skin_process_data() // clear out any existing skinned meshes in storage
 
     // needed for skinning process if we change modes
-    this.weight_skin_step.create_bone_formula_object(this.edit_skeleton_step.armature(), this.edit_skeleton_step.algorithm(),
-      this.load_skeleton_step.skeleton_type())
+    this.weight_skin_step.create_bone_formula_object(this.edit_skeleton_step.armature(), this.load_skeleton_step.skeleton_type())
 
     // Pass head weight correction settings to the weight skin step
     this.weight_skin_step.set_head_weight_correction_settings(
@@ -582,44 +581,14 @@ export class Mesh2MotionEngine {
     }
   }
 
-  public test_bone_weighting_success (): boolean {
-    this.debugging_visual_object = Utility.regenerate_debugging_scene(this.scene) // clear out the debugging scene
-
-    this.weight_skin_step.create_bone_formula_object(this.edit_skeleton_step.armature(), this.edit_skeleton_step.algorithm(),
-      this.load_skeleton_step.skeleton_type())
-
-    if (this.edit_skeleton_step.show_debugging()) {
-      this.weight_skin_step.set_show_debug(this.edit_skeleton_step.show_debugging())
-      this.weight_skin_step.set_debug_scene_object(this.debugging_visual_object)
-      this.weight_skin_step.set_bone_index_to_test(-1)
-    }
+  public setup_weight_skinning_config (): void {
+    this.weight_skin_step.create_bone_formula_object(this.edit_skeleton_step.armature(), this.load_skeleton_step.skeleton_type())
 
     // Pass head weight correction settings to the weight skin step
     this.weight_skin_step.set_head_weight_correction_settings(
       this.edit_skeleton_step.use_head_weight_correction(),
       this.edit_skeleton_step.get_preview_plane_height()
     )
-
-    // Don't do skinning operation if there are bones outside of the mesh
-    // that messes up the bone envelope calculation
-    let testing_geometry_success = true
-    this.load_model_step.models_geometry_list().forEach((mesh_geometry, index) => {
-      this.weight_skin_step.set_mesh_geometry(mesh_geometry)
-      const tester_data: BoneTesterData = this.weight_skin_step.test_geometry()
-
-      if (tester_data.bones_names_with_errors.length > 0) {
-        const names_with_object_index: string[] =
-          tester_data.bones_names_with_errors.map((bone_name: string) => bone_name + ` ${mesh_geometry.name}`)
-        this.show_skin_failure_message(names_with_object_index, tester_data.bones_vertices_with_errors)
-        testing_geometry_success = false
-      }
-    })
-
-    if (!testing_geometry_success) {
-      return false
-    }
-
-    return true
   }
 
   public show_contributors_dialog (): void {
