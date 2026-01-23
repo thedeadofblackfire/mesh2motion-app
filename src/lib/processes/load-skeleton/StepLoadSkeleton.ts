@@ -119,6 +119,8 @@ export class StepLoadSkeleton extends EventTarget {
         return SkeletonType.None
       case 'dragon':
         return SkeletonType.Dragon
+      case 'kaiju':
+        return SkeletonType.Kaiju
       default:
         console.error('unknown skeleton type selected: ', skeleton_file)
         return SkeletonType.Error

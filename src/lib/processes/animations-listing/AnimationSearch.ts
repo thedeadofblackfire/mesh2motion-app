@@ -152,6 +152,9 @@ export class AnimationSearch extends EventTarget {
         case SkeletonType.Dragon:
           preview_folder = 'dragon'
           break
+        case SkeletonType.Kaiju:
+          preview_folder = 'kaiju'
+          break
         default:
           preview_folder = 'error'
           console.error('Unknown skeleton type for animation previews. Update AnimationSearch.ts switch statement.')

@@ -83,6 +83,8 @@ export class StepLoadSourceSkeleton extends EventTarget {
         return SkeletonType.Bird
       case 'dragon':
         return SkeletonType.Dragon
+      case 'kaiju':
+        return SkeletonType.Kaiju
       default:
         return SkeletonType.None
     }
