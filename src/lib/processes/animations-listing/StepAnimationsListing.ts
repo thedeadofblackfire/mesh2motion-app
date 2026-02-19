@@ -470,10 +470,10 @@ export class StepAnimationsListing extends EventTarget {
       }
 
       if (error instanceof IncompatibleSkeletonError) {
-        const errorMessage = error.message === 'bone count mismatch' 
-          ? 'bone count mismatch' 
+        const error_message = error.message === 'bone_count_mismatch'
+          ? 'bone count mismatch'
           : 'bone names don\'t match'
-        new ModalDialog('import error', errorMessage).show()
+        new ModalDialog('import error', error_message).show()
         return { success: false, clipCount: 0 }
       }
 
