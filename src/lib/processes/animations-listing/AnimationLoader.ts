@@ -257,7 +257,7 @@ export class AnimationLoader extends EventTarget {
               throw new NoAnimationsError('No animations found in the GLB file.')
             }
 
-            // Validate bones match target skeleton
+            // Validate bones match target skeleton throws error and exits loading if not compatible
             this.validate_animation_bones_match(animations, skinned_meshes)
 
             this.file_progress_map.set(file.name, { loaded: file_total, total: file_total })
@@ -267,6 +267,11 @@ export class AnimationLoader extends EventTarget {
             const processed_clips = this.process_loaded_animations(animations, skeleton_scale)
             resolve(processed_clips)
           } catch (error) {
+            // Emit final progress to hide the loader UI
+            this.file_progress_map.set(file.name, { loaded: file_total, total: file_total })
+            this.completed_files = 1
+            this.emit_enhanced_progress(file.name, file_total, file_total)
+
             const error_message = error instanceof Error ? error.message : String(error)
             if (error instanceof NoAnimationsError || error instanceof IncompatibleSkeletonError) {
               reject(error)
