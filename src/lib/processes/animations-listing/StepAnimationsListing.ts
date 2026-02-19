@@ -276,17 +276,15 @@ export class StepAnimationsListing extends EventTarget {
     const animation_bone_names = this.get_animation_bone_names(animation_clips)
 
     if (animation_bone_names.size === 0) {
-      new ModalDialog('Imported animations do not contain recognizable bone tracks.', 'Error').show()
+      new ModalDialog('Import error', 'Imported animations do not contain recognizable bone tracks.').show()
       return false
     }
 
     const missing_bones = Array.from(animation_bone_names).filter(bone => !target_bone_names.has(bone))
     if (missing_bones.length > 0) {
-      const preview = missing_bones.slice(0, 5).join(', ')
-      const suffix = missing_bones.length > 5 ? '...' : ''
       new ModalDialog(
-        `Imported animations reference bones not in the current skeleton: ${preview}${suffix}`,
-        'Error'
+        'import error',
+        'no animations found in that glb file'
       ).show()
       return false
     }
