@@ -1,5 +1,6 @@
 import { UI } from '../../UI.ts'
 import { AnimationPlayer } from './AnimationPlayer.ts'
+import { ModalDialog } from '../../ModalDialog.ts'
 
 import {
   type AnimationClip, AnimationMixer, type SkinnedMesh, type AnimationAction, Object3D
@@ -7,6 +8,7 @@ import {
 
 import { AnimationUtility } from './AnimationUtility.ts'
 import { AnimationLoader, type AnimationLoadProgress } from './AnimationLoader.ts'
+import { CustomAnimationImporter } from './CustomAnimationImporter.ts'
 
 import { SkeletonType } from '../../enums/SkeletonType.ts'
 import { Utility } from '../../Utilities.ts'
@@ -33,7 +35,10 @@ export class StepAnimationsListing extends EventTarget {
   // we will use this to scale all position animation keyframes (uniform scale)
   private skeleton_scale: number = 1.0
 
+  private readonly custom_animation_importer: CustomAnimationImporter
+
   private _added_event_listeners: boolean = false
+  private is_loading_default_animations: boolean = false
 
   // enable status for mirroring animations
   public mirror_animations_enabled: boolean = false
@@ -57,6 +62,17 @@ export class StepAnimationsListing extends EventTarget {
     this.ui = UI.getInstance()
     this.animation_player = new AnimationPlayer()
     this.theme_manager = theme_manager
+
+    this.custom_animation_importer = new CustomAnimationImporter(
+      this.animation_loader,
+      () => this.skinned_meshes_to_animate,
+      () => this.skeleton_scale,
+      () => this.is_loading_default_animations,
+      (new_clips: TransformedAnimationClipPair[]) => {
+        this.animation_clips_loaded.push(...new_clips)
+        this.onAllAnimationsLoaded()
+      }
+    )
   }
 
   public begin (skeleton_type: SkeletonType, skeleton_scale: number): void {
@@ -101,6 +117,7 @@ export class StepAnimationsListing extends EventTarget {
     this.animation_player.clear_animation()
   }
 
+
   public mixer (): AnimationMixer {
     return this.animation_mixer
   }
@@ -125,6 +142,11 @@ export class StepAnimationsListing extends EventTarget {
     // Set the animations file path on the loader
     this.animation_loader.set_animations_file_path(this.animations_file_path)
 
+    this.is_loading_default_animations = true
+    if (this.ui.dom_import_animations_button != null) {
+      this.ui.dom_import_animations_button.disabled = true
+    }
+
     // Reset the animation clips loaded
     this.animation_clips_loaded = []
     // Create an animation mixer to do the playback. Play the first by default
@@ -138,11 +160,19 @@ export class StepAnimationsListing extends EventTarget {
       })
       .catch((error: Error) => {
         console.error('Failed to load animations:', error)
+        this.is_loading_default_animations = false
+        if (this.ui.dom_import_animations_button != null) {
+          this.ui.dom_import_animations_button.disabled = false
+        }
         // You could emit an error event here or show a user-friendly message
       })
   }
 
   private onAllAnimationsLoaded (): void {
+    this.is_loading_default_animations = false
+    if (this.ui.dom_import_animations_button != null) {
+      this.ui.dom_import_animations_button.disabled = false
+    }
     // sort all animation names alphabetically
     this.animation_clips_loaded.sort((a: TransformedAnimationClipPair, b: TransformedAnimationClipPair) => {
       if (a.display_animation_clip.name < b.display_animation_clip.name) { return -1 }
@@ -350,6 +380,8 @@ export class StepAnimationsListing extends EventTarget {
       this.rebuild_warped_animations()
       this.play_animation(this.current_playing_index)
     })
+
+    this.custom_animation_importer.add_event_listeners()
 
     // helps ensure we don't add event listeners multiple times
     this.has_added_event_listeners = true
