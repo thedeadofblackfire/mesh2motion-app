@@ -7,7 +7,8 @@ import {
 } from 'three'
 
 import { AnimationUtility } from './AnimationUtility.ts'
-import { AnimationLoader, type AnimationLoadProgress, NoAnimationsError, IncompatibleSkeletonError, LoadError } from './AnimationLoader.ts'
+import { AnimationLoader, type AnimationLoadProgress } from './AnimationLoader.ts'
+import { CustomAnimationImporter } from './CustomAnimationImporter.ts'
 
 import { SkeletonType } from '../../enums/SkeletonType.ts'
 import { Utility } from '../../Utilities.ts'
@@ -34,6 +35,8 @@ export class StepAnimationsListing extends EventTarget {
   // we will use this to scale all position animation keyframes (uniform scale)
   private skeleton_scale: number = 1.0
 
+  private readonly custom_animation_importer: CustomAnimationImporter
+
   private _added_event_listeners: boolean = false
   private is_loading_default_animations: boolean = false
 
@@ -59,6 +62,17 @@ export class StepAnimationsListing extends EventTarget {
     this.ui = UI.getInstance()
     this.animation_player = new AnimationPlayer()
     this.theme_manager = theme_manager
+
+    this.custom_animation_importer = new CustomAnimationImporter(
+      this.animation_loader,
+      () => this.skinned_meshes_to_animate,
+      () => this.skeleton_scale,
+      () => this.is_loading_default_animations,
+      (new_clips: TransformedAnimationClipPair[]) => {
+        this.animation_clips_loaded.push(...new_clips)
+        this.onAllAnimationsLoaded()
+      }
+    )
   }
 
   public begin (skeleton_type: SkeletonType, skeleton_scale: number): void {
@@ -367,45 +381,7 @@ export class StepAnimationsListing extends EventTarget {
       this.play_animation(this.current_playing_index)
     })
 
-    this.ui.dom_import_animations_button?.addEventListener('click', () => {
-      if (this.ui.dom_import_animations_button?.disabled === true || this.is_loading_default_animations) {
-        return
-      }
-      this.ui.dom_import_animations_input?.click()
-    })
-
-    this.ui.dom_import_animations_input?.addEventListener('change', async (event) => {
-      if (this.ui.dom_import_animations_button?.disabled === true || this.is_loading_default_animations) {
-        return
-      }
-      const input = event.target as HTMLInputElement
-      const files = input.files
-      if (files === null || files.length === 0) {
-        return
-      }
-
-      const import_button = this.ui.dom_import_animations_button
-      const previous_disabled_state: boolean | undefined = import_button?.disabled
-      if (import_button != null) {
-        import_button.disabled = true
-      }
-
-      try {
-        for (const file of Array.from(files)) {
-          const file_name = file.name.toLowerCase()
-          if (!file_name.endsWith('.glb')) {
-            new ModalDialog('Unsupported file type. Please select a GLB file.', 'Error').show()
-            continue
-          }
-          await this.import_animation_glb(file)
-        }
-      } finally {
-        input.value = ''
-        if (import_button != null && previous_disabled_state !== undefined) {
-          import_button.disabled = previous_disabled_state
-        }
-      }
-    })
+    this.custom_animation_importer.add_event_listeners()
 
     // helps ensure we don't add event listeners multiple times
     this.has_added_event_listeners = true
@@ -437,54 +413,5 @@ export class StepAnimationsListing extends EventTarget {
       return []
     }
     return this.animation_search.get_selected_animation_indices()
-  }
-
-  private async import_animation_glb (file: File): Promise<{ success: boolean, clipCount: number }> {
-    try {
-      const new_animation_clips = await this.animation_loader.load_animations_from_file(
-        file,
-        this.skinned_meshes_to_animate,
-        this.skeleton_scale
-      )
-
-      this.animation_clips_loaded.push(...new_animation_clips)
-      this.onAllAnimationsLoaded()
-
-      // Show success message only for user imports (not default animations)
-      if (!this.is_loading_default_animations) {
-        const animation_count = new_animation_clips.length
-        const animation_word = animation_count === 1 ? 'animation' : 'animations'
-        new ModalDialog(
-          'success',
-          `${animation_count} ${animation_word} imported successfully`
-        ).show()
-      }
-
-      return { success: true, clipCount: new_animation_clips.length }
-    } catch (error) {
-      console.error('Failed to import animations:', error)
-
-      if (error instanceof NoAnimationsError) {
-        new ModalDialog('import error', 'no animations found in that glb file').show()
-        return { success: false, clipCount: 0 }
-      }
-
-      if (error instanceof IncompatibleSkeletonError) {
-        const error_message = error.message === 'bone_count_mismatch'
-          ? 'bone count mismatch'
-          : 'bone names don\'t match'
-        new ModalDialog('import error', error_message).show()
-        return { success: false, clipCount: 0 }
-      }
-
-      if (error instanceof LoadError) {
-        new ModalDialog('import error', 'failed to load the animation file').show()
-        return { success: false, clipCount: 0 }
-      }
-
-      // Unknown error
-      new ModalDialog('import error', 'failed to import animations from the glb file').show()
-      return { success: false, clipCount: 0 }
-    }
   }
 }
