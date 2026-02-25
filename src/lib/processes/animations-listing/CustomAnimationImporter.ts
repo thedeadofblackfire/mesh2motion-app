@@ -88,8 +88,8 @@ export class CustomAnimationImporter {
         const animation_count = new_animation_clips.length
         const animation_word = animation_count === 1 ? 'animation' : 'animations'
         new ModalDialog(
-          'success',
-          `${animation_count} ${animation_word} imported successfully`
+          'Import Success',
+          `${animation_count} ${animation_word} Imported successfully`
         ).show()
       }
 
@@ -98,25 +98,25 @@ export class CustomAnimationImporter {
       console.error('Failed to import animations:', error)
 
       if (error instanceof NoAnimationsError) {
-        new ModalDialog('import error', 'no animations found in that glb file').show()
+        new ModalDialog('Import Error', 'No animations found in that glb file').show()
         return { success: false, clipCount: 0 }
       }
 
       if (error instanceof IncompatibleSkeletonError) {
         const error_message = error.message === 'bone_count_mismatch'
-          ? 'bone count mismatch'
-          : 'bone names don\'t match'
-        new ModalDialog('import error', error_message).show()
+          ? 'Bone count mismatch'
+          : 'Bone names don\'t match'
+        new ModalDialog('Import Error', error_message).show()
         return { success: false, clipCount: 0 }
       }
 
       if (error instanceof LoadError) {
-        new ModalDialog('import error', 'failed to load the animation file').show()
+        new ModalDialog('Import Error', 'failed to load the animation file').show()
         return { success: false, clipCount: 0 }
       }
 
       // Unknown error
-      new ModalDialog('import error', 'failed to import animations from the glb file').show()
+      new ModalDialog('Import Error', 'failed to import animations from the glb file').show()
       return { success: false, clipCount: 0 }
     }
   }
