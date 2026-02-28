@@ -226,7 +226,7 @@ button.secondary-button.play
 {
     padding: 0;
     display: inline-flex;
-    background: var(--bg-primary);
+    /* background: var(--bg-primary); */
     flex-grow: 1;
     align-items: center;
     border: none;
@@ -443,6 +443,7 @@ option {
     font-size: 90%;
     cursor: pointer;
     line-height: 110%;
+    text-align: left;
 }
 
 
@@ -651,4 +652,16 @@ input[type="file"] {
 #animation-progress-loader-container #loading-status-text {
     font-size: 1.1rem;
     color: var(--text-primary);     
+}
+
+.anim-custom-badge {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    border-radius: 3rem;
+    background: var(--button-alternate-bg);
+    color: #ffffff;
+    font-size: 0.9rem;
+    pointer-events: none;
+    padding: 0.5rem 1rem;
 }

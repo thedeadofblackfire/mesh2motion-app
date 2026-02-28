@@ -181,24 +181,25 @@ export class AnimationSearch extends EventTarget {
       const theme_name: string = this.theme_manager.get_current_theme()
       const is_custom_animation = animation_clip.metadata?.source_type === 'custom-import'
 
-      // build out inner HTML for animation item
-      let animation_entry_html = `<div class="${is_custom_animation ? 'anim-custom-item' : 'anim-item'}">
-            <button class="secondary-button play" data-index="${original_index}" style="display: flex; flex-direction:column">`
+      const preview_data_src_attribute = is_custom_animation
+        ? ''
+        : ` data-src="../animpreviews/${preview_folder}/${theme_name}_${anim_name}.webm"`
 
-      // custom animations won't have a video preview, so make it appear a bit different
-      if (is_custom_animation) {
-        animation_entry_html += '<div class="anim-preview-placeholder" style="pointer-events: none;">'
-      } else {
-        animation_entry_html += `<div class="anim-preview-placeholder" data-src="../animpreviews/${preview_folder}/${theme_name}_${anim_name}.webm" style="pointer-events: none;">`
-      }
+      const custom_animation_badge_html = is_custom_animation
+        ? '<span class="anim-custom-badge" title="Custom animation" aria-label="Custom animation">C</span>'
+        : ''
 
-      animation_entry_html += `<div class="anim-item">
-            <button class="secondary-button play" data-index="${original_index}" style="display: flex; flex-direction:column"></button>
-                        <label class="styled-checkbox">
-                            <input type="checkbox" name="${animation_clip.name}" value="${original_index}" ${checked_attribute}>
-                            <span class="anim-preview-label">${this.animation_name_clean(animation_clip.name)}</span>
-                        </label>
-                    </div>`
+      const animation_entry_html = `
+        <div class="${is_custom_animation ? 'anim-custom-item' : 'anim-item'}">
+          <button class="secondary-button play" data-index="${original_index}" style="display: flex; flex-direction:column; position: relative;">
+            ${custom_animation_badge_html}
+            <div class="anim-preview-placeholder"${preview_data_src_attribute} style="pointer-events: none;"></div>
+            <label class="styled-checkbox">
+              <input type="checkbox" name="${animation_clip.name}" value="${original_index}" ${checked_attribute}>
+              <span class="anim-preview-label">${this.animation_name_clean(animation_clip.name)}</span>
+            </label>
+          </button>
+        </div>`
 
       // append the entire item HTML to the DOM element
       this.animation_list_container.innerHTML += animation_entry_html
