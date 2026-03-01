@@ -24,6 +24,8 @@
   --radio-button-group-hover: rgb(37, 65, 97);
 
   --navigation-height: 40px;
+  --icon-size: 20px;
+  --navigation-icon-size: 30px;
 }
 
 /* Light theme */
@@ -80,6 +82,11 @@ nav a, nav span {
 nav .active-nav-item, nav a:hover {
     background: var(--nav-active-item-bg);
     text-decoration: none;
+}
+
+/* span helps have higher specificty than google font material symbols css */
+span.material-symbols-outlined {
+    font-size: 20px;
 }
 
 
@@ -665,4 +672,14 @@ input[type="file"] {
     font-size: 0.9rem;
     pointer-events: none;
     padding: 0.5rem 1rem;
+}
+
+.action-icon {
+    width: var(--icon-size);
+    height: var(--icon-size);
+}
+
+.nav-icon {
+    width: var(--navigation-icon-size);
+    height: var(--navigation-icon-size);
 }
