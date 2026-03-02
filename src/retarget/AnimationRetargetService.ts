@@ -224,7 +224,7 @@ export class AnimationRetargetService {
 
     // Create and return the new retargeted animation clip
     const retargeted_clip = new AnimationClip(
-      `${source_clip.name}_retargeted`,
+      `${source_clip.name} RT`, // RT means retargeted
       source_clip.duration,
       retargeted_tracks
     )

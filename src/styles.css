@@ -531,6 +531,7 @@ input[type="file"] {
 .styled-checkbox {
     display: flex;
     align-items: center;
+    align-self: start; /* left justify */
     gap: 0.2rem; /* Space between checkbox and label */
     margin-bottom: 0.4rem;
     margin-top: 0.4rem;
