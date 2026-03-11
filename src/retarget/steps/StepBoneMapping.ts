@@ -16,7 +16,9 @@ export enum TargetBoneMappingType {
 export class StepBoneMapping extends EventTarget {
   // DOM references
   private source_bones_list: HTMLDivElement | null = null
+  private source_bones_filter: HTMLInputElement | null = null
   private target_bones_list: HTMLDivElement | null = null
+  private target_bones_filter: HTMLInputElement | null = null
   private clear_mappings_button: HTMLButtonElement | null = null
   private auto_map_button: HTMLButtonElement | null = null
   private view_bone_tree_button: HTMLButtonElement | null = null
@@ -33,7 +35,9 @@ export class StepBoneMapping extends EventTarget {
   public begin (): void {
     // Get DOM references
     this.source_bones_list = document.getElementById('source-bones-list') as HTMLDivElement
+    this.source_bones_filter = document.getElementById('source-bones-filter') as HTMLInputElement
     this.target_bones_list = document.getElementById('target-bones-list') as HTMLDivElement
+    this.target_bones_filter = document.getElementById('target-bones-filter') as HTMLInputElement
     this.clear_mappings_button = document.getElementById('clear-mappings-button') as HTMLButtonElement
     this.auto_map_button = document.getElementById('auto-map-button') as HTMLButtonElement
     this.view_bone_tree_button = document.getElementById('view-bone-tree-button') as HTMLButtonElement
@@ -65,6 +69,16 @@ export class StepBoneMapping extends EventTarget {
       // Add event listener for auto-map button
       this.auto_map_button?.addEventListener('click', () => {
         this.auto_map_bones()
+      })
+
+      // Filter source bones as user types
+      this.source_bones_filter?.addEventListener('input', () => {
+        this.update_source_bones_list()
+      })
+
+      // Filter target bones as user types
+      this.target_bones_filter?.addEventListener('input', () => {
+        this.update_target_bones_list()
       })
 
       this.has_added_event_listeners = true
@@ -173,7 +187,18 @@ export class StepBoneMapping extends EventTarget {
     }
 
     this.source_bones_list.innerHTML = ''
-    source_bone_names.forEach((name) => {
+
+    const source_filter_value = this.source_bones_filter?.value.trim().toLowerCase() ?? ''
+    const filtered_source_bone_names = source_filter_value === ''
+      ? source_bone_names
+      : source_bone_names.filter((bone_name) => bone_name.toLowerCase().includes(source_filter_value))
+
+    if (filtered_source_bone_names.length === 0) {
+      this.source_bones_list.innerHTML = '<em>No matching source bones</em>'
+      return
+    }
+
+    filtered_source_bone_names.forEach((name) => {
       const bone_item = document.createElement('div')
       bone_item.textContent = name
       bone_item.className = 'bone-item bone-item-source'
@@ -206,8 +231,19 @@ export class StepBoneMapping extends EventTarget {
     }
 
     this.target_bones_list.innerHTML = ''
+
+    const target_filter_value = this.target_bones_filter?.value.trim().toLowerCase() ?? ''
+    const filtered_target_bone_names = target_filter_value === ''
+      ? target_bone_names
+      : target_bone_names.filter((bone_name) => bone_name.toLowerCase().includes(target_filter_value))
+
+    if (filtered_target_bone_names.length === 0) {
+      this.target_bones_list.innerHTML = '<em>No matching target bones</em>'
+      return
+    }
+
     const bone_mappings: Map<string, string> = AnimationRetargetService.getInstance().get_bone_mappings()
-    target_bone_names.forEach((name) => {
+    filtered_target_bone_names.forEach((name) => {
       const bone_item = document.createElement('div')
       bone_item.className = 'bone-item bone-item-target'
       bone_item.dataset.targetBoneName = name
