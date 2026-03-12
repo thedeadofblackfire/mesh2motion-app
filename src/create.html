@@ -200,14 +200,13 @@
                             <button id="load-skeleton-button">Edit Skeleton &nbsp;&#x203a;</button>
                         </div>
 
-
                 </div>
 
 
             <span id="skeleton-step-actions">
 
                 <!-- undo/redo system-->
-                <fieldset style="position: fixed; right: 272px; top: 52px;">
+                <fieldset style="position: fixed; right: 300px; top: 52px;">
                     <div style="display: flex; gap: 2px;">
                         <button id="undo-button" class="secondary-button" title="Undo (Ctrl+Z)" disabled>
                             <img src="images/icons/undo.png" alt="Undo" width="16" height="16" />
@@ -223,6 +222,47 @@
                  <p id="bone-selection-section">
                     <span>Selected Bone: <span id="edit-selected-bone-label">None</span></span>
                 </p>
+
+                <div style="display: flex; flex-direction: column;">
+
+                    <div class="styled-checkbox">
+                        <input type="checkbox" id="mesh-drag-placement" name="mesh-drag-placement" value="mesh-drag-placement" checked>
+                        <label for="mesh-drag-placement">Position by mesh volume</label>
+                    </div>
+
+                    <div id="transform-manual-options" style="display: flex; flex-direction: row;">
+                        <fieldset>
+                            <span>Transform</span>
+                            <div id="transform-control-type-group" class="toggle">
+                                <input type="radio" name="transform-control-type" value="translate" id="transform-translate" checked="checked" />
+                                <label for="transform-translate">
+                                    <img src="images/icons/tool-move.svg" alt="Translate" width="20" height="20" title="Translation" />
+                                </label>
+                                <input type="radio" name="transform-control-type" value="rotation" id="transform-rotate" />
+                                <label for="transform-rotate">
+                                    <img src="images/icons/tool-rotate.svg" alt="Rotate" width="20" height="20" title="Rotation" />
+                                </label>
+                            </div>
+                        </fieldset>
+
+                        <fieldset>
+                            <span>Space</span>
+                            <div id="transform-space-group" class="toggle">
+                                <input type="radio" name="transform-space" value="global" id="transform-global" checked="checked" />
+                                <label for="transform-global">
+                                    <img src="images/icons/tool-global.svg" alt="Global" width="20" height="20" title="Global" />
+                                </label>
+                                <input type="radio" name="transform-space" value="local" id="transform-local" />
+                                <label for="transform-local">
+                                    <img src="images/icons/tool-local.svg" alt="Local" width="20" height="20" title="Local" />
+                                </label>
+                            </div>
+                    </fieldset>
+                    </div>
+
+                </div>
+
+                <hr />
 
                 <!-- controls to change transfrom mode between transform and rotation -->
                  <div style="display: flex; flex-direction: row;">
@@ -242,34 +282,6 @@
     
                         </div>
                     </fieldset>
-
-                    <fieldset>
-                        <span>Transform</span>
-                        <div id="transform-control-type-group" class="toggle">
-                            <input type="radio" name="transform-control-type" value="translate" id="transform-translate" checked="checked" />
-                            <label for="transform-translate">
-                                <img src="images/icons/tool-move.svg" alt="Translate" width="20" height="20" title="Translation" />
-                            </label>
-                            <input type="radio" name="transform-control-type" value="rotation" id="transform-rotate" />
-                            <label for="transform-rotate">
-                                <img src="images/icons/tool-rotate.svg" alt="Rotate" width="20" height="20" title="Rotation" />
-                            </label>
-                        </div>
-                    </fieldset>
-
-                    <fieldset>
-                        <span>Space</span>
-                        <div id="transform-space-group" class="toggle">
-                            <input type="radio" name="transform-space" value="global" id="transform-global" checked="checked" />
-                            <label for="transform-global">
-                                <img src="images/icons/tool-global.svg" alt="Global" width="20" height="20" title="Global" />
-                            </label>
-                            <input type="radio" name="transform-space" value="local" id="transform-local" />
-                            <label for="transform-local">
-                                <img src="images/icons/tool-local.svg" alt="Local" width="20" height="20" title="Local" />
-                            </label>
-                        </div>
-                    </fieldset>
                  </div>
 
 
@@ -285,10 +297,6 @@
                     <label for="independent-bone-movement">Move Bone Independently</label>
                 </div>
 
-                <div class="styled-checkbox">
-                    <input type="checkbox" id="mesh-drag-placement" name="mesh-drag-placement" value="mesh-drag-placement" checked>
-                    <label for="mesh-drag-placement">Drag Bone Through Mesh (place in center)</label>
-                </div>
 
                 <hr />
 

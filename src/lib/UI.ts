@@ -42,6 +42,7 @@ export class UI {
 
   // edit skeleton UI step controls
   dom_selected_bone_label: HTMLElement | null = null
+  dom_transform_manual_options: HTMLElement | null = null
   dom_transform_type_radio_group: HTMLElement | null = null
   dom_transform_space_radio_group: HTMLElement | null = null
 
@@ -148,6 +149,7 @@ export class UI {
     this.dom_redo_button = document.querySelector('#redo-button')
 
     this.dom_selected_bone_label = document.querySelector('#edit-selected-bone-label')
+    this.dom_transform_manual_options = document.querySelector('#transform-manual-options')
 
     this.dom_transform_type_radio_group = document.querySelector('#transform-control-type-group')
     this.dom_transform_space_radio_group = document.querySelector('#transform-space-group')

@@ -231,6 +231,7 @@ export class StepEditSkeleton extends EventTarget {
 
   public set_mesh_drag_placement_enabled (value: boolean): void {
     this.mesh_drag_placement_enabled = value
+    this.update_manual_transform_options_visibility()
     this.dispatchEvent(new CustomEvent('boneEditModeChanged', {
       detail: { enabled: value }
     }))
@@ -238,6 +239,14 @@ export class StepEditSkeleton extends EventTarget {
 
   public is_mesh_drag_placement_enabled (): boolean {
     return this.mesh_drag_placement_enabled
+  }
+
+  private update_manual_transform_options_visibility (): void {
+    if (this.ui.dom_transform_manual_options === null) {
+      return
+    }
+
+    this.ui.dom_transform_manual_options.style.display = this.mesh_drag_placement_enabled ? 'none' : 'flex'
   }
 
   public is_bone_selectable (bone: Bone | null): boolean {
