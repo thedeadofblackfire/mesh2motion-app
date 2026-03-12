@@ -26,6 +26,7 @@ export class UI {
   dom_hand_skeleton_selection: HTMLSelectElement | null = null
   dom_mirror_skeleton_checkbox: HTMLInputElement | null = null
   dom_independent_bone_movement_checkbox: HTMLInputElement | null = null
+  dom_mesh_drag_placement_checkbox: HTMLInputElement | null = null
   dom_scale_skeleton_button: HTMLButtonElement | null = null
   dom_undo_button: HTMLButtonElement | null = null
   dom_redo_button: HTMLButtonElement | null = null
@@ -139,6 +140,7 @@ export class UI {
     this.dom_hand_skeleton_selection = document.querySelector('#hand-skeleton-selection')
     this.dom_mirror_skeleton_checkbox = document.querySelector('#mirror-skeleton')
     this.dom_independent_bone_movement_checkbox = document.querySelector('#independent-bone-movement')
+    this.dom_mesh_drag_placement_checkbox = document.querySelector('#mesh-drag-placement')
     this.dom_scale_skeleton_button = document.querySelector('#scale-skeleton-button')
     this.dom_reset_skeleton_scale_button = document.querySelector('#reset-skeleton-scale-button')
 

@@ -15,6 +15,7 @@ import { UI } from './lib/UI.ts'
 import { StepLoadModel } from './lib/processes/load-model/StepLoadModel.ts'
 import { StepLoadSkeleton } from './lib/processes/load-skeleton/StepLoadSkeleton.ts'
 import { StepEditSkeleton } from './lib/processes/edit-skeleton/StepEditSkeleton.ts'
+import { MeshDragBonePlacement } from './lib/processes/edit-skeleton/MeshDragBonePlacement.ts'
 import { StepAnimationsListing } from './lib/processes/animations-listing/StepAnimationsListing.ts'
 import { StepExportToFile } from './lib/processes/export-to-file/StepExportToFile.ts'
 import { StepWeightSkin } from './lib/processes/weight-skin/StepWeightSkin.ts'
@@ -41,6 +42,7 @@ export class Mesh2MotionEngine {
   public readonly transform_controls: TransformControls = new TransformControls(this.camera, this.renderer.domElement)
   public is_transform_controls_dragging: boolean = false
   public readonly transform_controls_hover_distance: number = 0.02 // distance to hover over bones to select them
+  public readonly mesh_drag_bone_placement: MeshDragBonePlacement
 
   public view_helper: CustomViewHelper | undefined // mini 3d view to help orient orthographic views
 
@@ -89,6 +91,13 @@ export class Mesh2MotionEngine {
     this.weight_skin_step = new StepWeightSkin()
     this.animations_listing_step = new StepAnimationsListing(this.theme_manager)
     this.file_export_step = new StepExportToFile()
+    this.mesh_drag_bone_placement = new MeshDragBonePlacement(
+      this.camera,
+      this.edit_skeleton_step,
+      this.load_model_step,
+      this.weight_skin_step,
+      this.transform_controls_hover_distance
+    )
 
     this.setup_environment()
     this.eventListeners.addEventListeners()
@@ -199,6 +208,7 @@ export class Mesh2MotionEngine {
     this.controls.maxDistance = 30 // Maximum zoom (farthest from model)
 
     this.controls.update()
+    this.mesh_drag_bone_placement.set_orbit_controls(this.controls)
 
     this.view_helper = new CustomViewHelper(this.camera, document.getElementById('view-control-hitbox'))
     this.view_helper.set_labels('X', 'Y', 'Z')
@@ -283,6 +293,36 @@ export class Mesh2MotionEngine {
         : undefined
       this.edit_skeleton_step.independent_bone_movement.apply(selected_bone, mirror_bone)
     }
+  }
+
+  public handle_mesh_drag_mode_mouse_down (mouse_event: MouseEvent): void {
+    this.mesh_drag_bone_placement.handle_mouse_down(mouse_event)
+  }
+
+  public handle_mesh_drag_mode_mouse_move (mouse_event: MouseEvent): void {
+    this.mesh_drag_bone_placement.handle_mouse_move(mouse_event)
+  }
+
+  public handle_mesh_drag_mode_mouse_up (): void {
+    const did_end_drag = this.mesh_drag_bone_placement.handle_mouse_up()
+
+    if (!did_end_drag) {
+      return
+    }
+
+    if (this.process_step === ProcessStep.EditSkeleton &&
+      this.mesh_preview_display_type === ModelPreviewDisplay.WeightPainted) {
+      this.regenerate_weight_painted_preview_mesh()
+    }
+  }
+
+  public update_edit_bone_interaction_mode (): void {
+    this.mesh_drag_bone_placement.sync_interaction_mode(this.process_step, this.transform_controls)
+    this.is_transform_controls_dragging = false
+  }
+
+  public get is_mesh_drag_mode_dragging (): boolean {
+    return this.mesh_drag_bone_placement.is_dragging()
   }
 
   private show_skin_failure_message (bone_names_with_errors: string[], error_point_positions: Vector3[]): void {
@@ -382,7 +422,7 @@ export class Mesh2MotionEngine {
       this.regenerate_skeleton_helper(this.edit_skeleton_step.skeleton())
       process_step = ProcessStep.EditSkeleton
       this.edit_skeleton_step.begin(this.scene, this.load_skeleton_step.skeleton_type())
-      this.transform_controls.enabled = true
+      this.update_edit_bone_interaction_mode()
       this.transform_controls.setMode(this.transform_controls_type) // 'translate', 'rotate'
 
       this.sync_skeleton_helper_joint_visibility()

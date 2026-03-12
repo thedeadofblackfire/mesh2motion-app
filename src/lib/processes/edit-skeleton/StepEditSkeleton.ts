@@ -38,6 +38,7 @@ export class StepEditSkeleton extends EventTarget {
   // Skeleton created from the armature that Three.js uses
   private threejs_skeleton: Skeleton = new Skeleton()
   private mirror_mode_enabled: boolean = true
+  private mesh_drag_placement_enabled: boolean = true
   private skinning_algorithm: string | null = null
   private show_debug: boolean = true
 
@@ -149,6 +150,10 @@ export class StepEditSkeleton extends EventTarget {
       this.independent_bone_movement.set_enabled(this.ui.dom_independent_bone_movement_checkbox.checked)
     }
 
+    if (this.ui.dom_mesh_drag_placement_checkbox !== null) {
+      this.set_mesh_drag_placement_enabled(this.ui.dom_mesh_drag_placement_checkbox.checked)
+    }
+
     this.update_bind_button_text()
 
     // Don't add event listeners again if we are navigating back to this step
@@ -205,7 +210,7 @@ export class StepEditSkeleton extends EventTarget {
    * @description This is the bone that is currently selected in the UI while editing
    * the skeleton.
    */
-  public set_currently_selected_bone (bone: Bone): void {
+  public set_currently_selected_bone (bone: Bone | null): void {
     this.currently_selected_bone = bone
   }
 
@@ -222,6 +227,17 @@ export class StepEditSkeleton extends EventTarget {
 
   public is_mirror_mode_enabled (): boolean {
     return this.mirror_mode_enabled
+  }
+
+  public set_mesh_drag_placement_enabled (value: boolean): void {
+    this.mesh_drag_placement_enabled = value
+    this.dispatchEvent(new CustomEvent('boneEditModeChanged', {
+      detail: { enabled: value }
+    }))
+  }
+
+  public is_mesh_drag_placement_enabled (): boolean {
+    return this.mesh_drag_placement_enabled
   }
 
   public is_bone_selectable (bone: Bone | null): boolean {
@@ -322,6 +338,18 @@ export class StepEditSkeleton extends EventTarget {
         }
 
         this.independent_bone_movement.set_enabled(target.checked)
+      })
+    }
+
+    if (this.ui.dom_mesh_drag_placement_checkbox !== null) {
+      this.ui.dom_mesh_drag_placement_checkbox.addEventListener('change', (event) => {
+        const target = event.target as HTMLInputElement | null
+
+        if (target === null) {
+          return
+        }
+
+        this.set_mesh_drag_placement_enabled(target.checked)
       })
     }
 
