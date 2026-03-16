@@ -51,7 +51,7 @@ export class ModelCleanupUtility {
   }
 
   public static move_model_to_floor (mesh_data: Scene | Group<Object3DEventMap>): void {
-    let final_lowest_point = 0
+    let final_lowest_point = Infinity
     mesh_data.traverse((obj: Object3D) => {
       if (obj.type === 'Mesh') {
         const mesh_obj: Mesh = obj as Mesh
@@ -63,12 +63,30 @@ export class ModelCleanupUtility {
       }
     })
 
+    if (!isFinite(final_lowest_point) || final_lowest_point === 0) return
+
     mesh_data.traverse((obj: Object3D) => {
       if (obj.type === 'Mesh') {
         const mesh_obj: Mesh = obj as Mesh
 
         const offset = final_lowest_point * -1
         mesh_obj.geometry.translate(0, offset, 0)
+        mesh_obj.geometry.computeBoundingBox()
+        mesh_obj.geometry.computeBoundingSphere()
+      }
+    })
+  }
+
+  public static translate_model_vertices (
+    mesh_data: Scene | Group<Object3DEventMap>,
+    dx: number,
+    dy: number,
+    dz: number
+  ): void {
+    mesh_data.traverse((obj: Object3D) => {
+      if (obj.type === 'Mesh') {
+        const mesh_obj: Mesh = obj as Mesh
+        mesh_obj.geometry.translate(dx, dy, dz)
         mesh_obj.geometry.computeBoundingBox()
         mesh_obj.geometry.computeBoundingSphere()
       }
