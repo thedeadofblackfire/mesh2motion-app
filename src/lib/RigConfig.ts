@@ -9,7 +9,7 @@ export interface RigConfigEntry {
   animation_preview_folder: string // Sub-folder name used when referencing animation preview thumbnails
   has_hand_options: boolean // Only Human has per-finger hand skeleton options
   has_head_weight_correction: boolean // Only Human shows the head weight correction panel
-  has_a_pose_correction: boolean // Only Human shows the A-pose arm-extension correction slider
+  has_arm_extension: boolean // Only Human shows the arm expand/contract slider
 }
 
 /**
@@ -29,7 +29,7 @@ export class RigConfig {
       animation_preview_folder: 'human',
       has_hand_options: true,
       has_head_weight_correction: true,
-      has_a_pose_correction: true
+      has_arm_extension: true
     } satisfies RigConfigEntry,
     {
       skeleton_type: SkeletonType.Fox,
@@ -40,7 +40,7 @@ export class RigConfig {
       animation_preview_folder: 'fox',
       has_hand_options: false,
       has_head_weight_correction: false,
-      has_a_pose_correction: false
+      has_arm_extension: false
     } satisfies RigConfigEntry,
     {
       skeleton_type: SkeletonType.Bird,
@@ -51,7 +51,7 @@ export class RigConfig {
       animation_preview_folder: 'bird',
       has_hand_options: false,
       has_head_weight_correction: false,
-      has_a_pose_correction: false
+      has_arm_extension: false
     } satisfies RigConfigEntry,
     {
       skeleton_type: SkeletonType.Dragon,
@@ -62,7 +62,7 @@ export class RigConfig {
       animation_preview_folder: 'dragon',
       has_hand_options: false,
       has_head_weight_correction: false,
-      has_a_pose_correction: false
+      has_arm_extension: false
     } satisfies RigConfigEntry,
     {
       skeleton_type: SkeletonType.Kaiju,
@@ -73,7 +73,7 @@ export class RigConfig {
       animation_preview_folder: 'kaiju',
       has_hand_options: false,
       has_head_weight_correction: false,
-      has_a_pose_correction: false
+      has_arm_extension: false
     } satisfies RigConfigEntry,
     {
       skeleton_type: SkeletonType.Spider,
@@ -84,7 +84,7 @@ export class RigConfig {
       animation_preview_folder: 'spider',
       has_hand_options: false,
       has_head_weight_correction: false,
-      has_a_pose_correction: false
+      has_arm_extension: false
     } satisfies RigConfigEntry
   ]
 
