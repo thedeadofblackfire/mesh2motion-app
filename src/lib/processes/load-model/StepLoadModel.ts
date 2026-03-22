@@ -44,6 +44,8 @@ export class StepLoadModel extends EventTarget {
   triangle_count = 0
   objects_count = 0
 
+  private original_geometry_positions: Float32Array[] = []
+
   /**
    * Skinned mesh data that will be used for retargeting
    * @returns Loaded Skinned mesh data that will be used for retargeting
@@ -230,11 +232,30 @@ export class StepLoadModel extends EventTarget {
     this.final_mesh_data = new Scene()
     this.geometry_list.length = 0
     this.material_list.length = 0
+    this.original_geometry_positions = []
     this.vertex_count = 0
     this.triangle_count = 0
     this.objects_count = 0
     this.mesh_has_broken_material = false
     this.preserve_skinned_mesh = false
+  }
+
+  public reset_model_position (): void {
+    let i = 0
+    this.final_mesh_data.traverse((obj: Object3D) => {
+      if (obj.type === 'Mesh') {
+        const mesh = obj as Mesh
+        const attr = mesh.geometry.attributes.position
+        const original = this.original_geometry_positions[i++]
+        if (original !== undefined) {
+          ;(attr.array as Float32Array).set(original)
+          attr.needsUpdate = true
+          mesh.geometry.computeBoundingBox()
+          mesh.geometry.computeBoundingSphere()
+        }
+      }
+    })
+    this.final_mesh_data.position.set(0, 0, 0)
   }
 
   /**
@@ -387,6 +408,15 @@ export class StepLoadModel extends EventTarget {
 
     // assign the final cleaned up model to the original model data
     this.final_mesh_data = this.model_meshes()
+
+    // snapshot vertex positions so we can reset later
+    this.original_geometry_positions = []
+    this.final_mesh_data.traverse((obj: Object3D) => {
+      if (obj.type === 'Mesh') {
+        const positions = (obj as Mesh).geometry.attributes.position.array as Float32Array
+        this.original_geometry_positions.push(new Float32Array(positions))
+      }
+    })
 
     console.log('final mesh data should be prepared at this point', this.final_mesh_data)
 

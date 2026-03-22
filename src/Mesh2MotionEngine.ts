@@ -34,6 +34,7 @@ import { TransformControlType } from './lib/enums/TransformControlType.ts'
 import { TransformSpace } from './lib/enums/TransformSpace.ts'
 import { ThemeManager } from './lib/ThemeManager.ts'
 import { ModalDialog } from './lib/ModalDialog.ts'
+import { ModelCleanupUtility } from './lib/processes/load-model/ModelCleanupUtility.ts'
 
 export class Mesh2MotionEngine {
   public readonly camera = Generators.create_camera()
@@ -43,6 +44,7 @@ export class Mesh2MotionEngine {
   public readonly transform_controls: TransformControls = new TransformControls(this.camera, this.renderer.domElement)
   public is_transform_controls_dragging: boolean = false
   public readonly transform_controls_hover_distance: number = 0.02 // distance to hover over bones to select them
+  public is_model_gizmo_active: boolean = false
   public readonly mesh_drag_bone_placement: MeshDragBonePlacement
 
   public view_helper: CustomViewHelper | undefined // mini 3d view to help orient orthographic views
@@ -282,6 +284,8 @@ export class Mesh2MotionEngine {
   }
 
   public handle_transform_controls_moving (): void {
+    if (this.is_model_gizmo_active) { return }
+
     const selected_bone: Bone = this.transform_controls.object as Bone
 
     if (this.edit_skeleton_step.is_mirror_mode_enabled()) {
@@ -295,6 +299,27 @@ export class Mesh2MotionEngine {
         : undefined
       this.edit_skeleton_step.independent_bone_movement.apply(selected_bone, mirror_bone)
     }
+  }
+
+  // --- Model position gizmo (step 2) ---
+
+  public enable_model_gizmo (): void {
+    this.is_model_gizmo_active = true
+    this.transform_controls.attach(this.load_model_step.model_meshes())
+    this.transform_controls.setMode('translate')
+    this.transform_controls.enabled = true
+  }
+
+  private bake_and_disable_model_gizmo (): void {
+    const mesh_data = this.load_model_step.model_meshes()
+    const pos = mesh_data.position
+    if (pos.x !== 0 || pos.y !== 0 || pos.z !== 0) {
+      ModelCleanupUtility.translate_model_vertices(mesh_data, pos.x, pos.y, pos.z)
+      mesh_data.position.set(0, 0, 0)
+    }
+    this.is_model_gizmo_active = false
+    this.transform_controls.detach()
+    this.transform_controls.enabled = false
   }
 
   public handle_mesh_drag_mode_mouse_down (mouse_event: MouseEvent): void {
@@ -386,6 +411,15 @@ export class Mesh2MotionEngine {
       this.show_animation_player(false)
     }
 
+    // bake model gizmo position into vertices before transitioning away from step 2
+    if (this.is_model_gizmo_active) {
+      this.bake_and_disable_model_gizmo()
+    }
+
+    // when we change steps, we are re-creating the skeleton and helper
+    // so the current transform control reference will be lost/give an error
+    this.transform_controls.detach()
+
     /**********
      * MAIN PROCESS FLOW LOGIC
      * I am doing else if here since the bindpose step changes the step at the end
@@ -410,9 +444,8 @@ export class Mesh2MotionEngine {
       // initializing all the load skeleton step stuff
       this.scene.add(this.load_model_step.model_meshes())
 
-      // we generate a preview skeleton on this step, and we don't want
-      // the user to start trying to edit the skeleton at this point
-      this.transform_controls.enabled = false
+      // enable model position gizmo so user can freely position the model
+      this.enable_model_gizmo()
 
       // finish initialization and add origin markers
       // this needs to happen at the end since it is expecting the mesh data
@@ -464,10 +497,6 @@ export class Mesh2MotionEngine {
         this.skeleton_helper.hide() // hide skeleton helper in animations listing step
       }
     }
-
-    // when we change steps, we are re-creating the skeleeton and helper
-    // so the current transform control reference will be lost/give an error
-    this.transform_controls.detach()
 
     return this.process_step
   } // end process_step_changed()

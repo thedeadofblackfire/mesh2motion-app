@@ -16,7 +16,8 @@ export class UI {
   dom_rotate_model_x_button: HTMLButtonElement | null = null
   dom_rotate_model_y_button: HTMLButtonElement | null = null
   dom_rotate_model_z_button: HTMLButtonElement | null = null
-  dom_move_model_to_floor_button: HTMLButtonElement | null = null
+  dom_reset_model_position_button: HTMLButtonElement | null = null
+  dom_auto_align_model_button: HTMLButtonElement | null = null
 
   dom_load_skeleton_tools: HTMLElement | null = null
   dom_load_skeleton_button: HTMLButtonElement | null = null
@@ -34,7 +35,7 @@ export class UI {
   dom_scale_skeleton_input_box: HTMLElement | null = null
   dom_move_to_origin_button: HTMLButtonElement | null = null
 
-  // scale skeleton contols
+  // scale skeleton controls
   dom_scale_skeleton_input: HTMLInputElement | null = null
   dom_scale_skeleton_percentage_display: HTMLElement | null = null
   dom_scale_skeleton_controls: HTMLElement | null = null
@@ -130,7 +131,8 @@ export class UI {
     this.dom_rotate_model_x_button = document.querySelector('#rotate-model-x-button')
     this.dom_rotate_model_y_button = document.querySelector('#rotate-model-y-button')
     this.dom_rotate_model_z_button = document.querySelector('#rotate-model-z-button')
-    this.dom_move_model_to_floor_button = document.querySelector('#move-model-to-floor-button')
+    this.dom_reset_model_position_button = document.querySelector('#reset-model-position-button')
+    this.dom_auto_align_model_button = document.querySelector('#auto-align-model-button')
 
     // UI controls for loading/working with skeleton
     this.dom_load_skeleton_tools = document.querySelector('#load-skeleton-tools')

@@ -166,9 +166,20 @@ export class EventListeners {
       this.bootstrap.load_model_step.rotate_model_geometry('z', 90)
     })
 
-    this.bootstrap.ui.dom_move_model_to_floor_button?.addEventListener('click', () => {
+    // Reset model position to import state
+    this.bootstrap.ui.dom_reset_model_position_button?.addEventListener('click', () => {
+      this.bootstrap.load_model_step.reset_model_position()
+    })
+
+    // Auto-align model to floor
+    this.bootstrap.ui.dom_auto_align_model_button?.addEventListener('click', () => {
       const mesh_data = this.bootstrap.load_model_step.model_meshes()
       ModelCleanupUtility.move_model_to_floor(mesh_data)
+      const py = mesh_data.position.y
+      if (py !== 0) {
+        ModelCleanupUtility.translate_model_vertices(mesh_data, 0, py, 0)
+        mesh_data.position.setY(0)
+      }
     })
 
     this.bootstrap.ui.dom_show_skeleton_checkbox?.addEventListener('click', (event: MouseEvent) => {

@@ -76,6 +76,7 @@ export class StepLoadSkeleton extends EventTarget {
         this.hand_skeleton_type(), this.skeleton_scale_percentage).catch((err) => {
         console.error('error loading preview skeleton: ', err)
       })
+
     }
 
     // Initialize hand skeleton hand options visibility
@@ -143,9 +144,10 @@ export class StepLoadSkeleton extends EventTarget {
           this.ui.dom_skeleton_drop_type?.options.remove(0)
         }
 
-        // show the scale skeleton options in case they are hidden
-        this.ui.dom_scale_skeleton_controls!.style.display = 'flex'
-
+        // show the scale skeleton options and advanced settings in case they are hidden
+        if (this.ui.dom_scale_skeleton_controls !== null) {
+          this.ui.dom_scale_skeleton_controls.style.display = 'flex'
+        }
         // load the preview skeleton
         // need to get the file name for the correct skeleton
         // we pass the skeleton scale in the case where we set a skeleton, change scale, then change the skeleton
@@ -193,6 +195,7 @@ export class StepLoadSkeleton extends EventTarget {
     this.ui.dom_reset_skeleton_scale_button?.addEventListener('click', () => {
       this.update_skeleton_scale_to_value(1.0)
     })
+
   }
 
   private update_skeleton_scale_to_value (new_value: number): void {
@@ -202,7 +205,6 @@ export class StepLoadSkeleton extends EventTarget {
     if (this.ui.dom_scale_skeleton_percentage_display !== null) {
       this.ui.dom_scale_skeleton_percentage_display.textContent = display_value
     }
-    // re-add the preview skeleton with the new scale
     add_preview_skeleton(this._main_scene, this.skeleton_file_path(), this.hand_skeleton_type(), this.skeleton_scale_percentage)
       .catch((err) => {
         console.error('error loading preview skeleton: ', err)
@@ -241,7 +243,6 @@ export class StepLoadSkeleton extends EventTarget {
         helper.modify_hand_skeleton(this.loaded_armature, this.hand_skeleton_type())
       }
 
-      // reset the armature to 0,0,0 in case it is off for some reason
       this.loaded_armature.position.set(0, 0, 0)
       this.loaded_armature.updateWorldMatrix(true, true)
 
@@ -262,26 +263,29 @@ export class StepLoadSkeleton extends EventTarget {
     btn.disabled = !allow // disable when not allowed
   }
 
-  // returns a skeleton object that has been baked (applied) for scale 
+  // returns a skeleton object that has been baked (applied) for scale
   public armature (): Object3D<Object3DEventMap> {
     return this.bake_scale_for_armature(this.loaded_armature)
   }
 
   // this does not mutate armature that goes in
-  // update all positions for bones and resets scale to 1
+  // bakes scale into bone positions and resets scale to 1
   private bake_scale_for_armature (armature: Object3D): Object3D {
     const scale = armature.scale.x // assumes uniform scale
-    if (scale === 1) return armature.clone() // no changes. just return existing skeleton
 
     const cloned_armature: Object3D = armature.clone()
-    cloned_armature.traverse((obj) => {
-      if (obj instanceof Object3D && obj !== cloned_armature) {
-        obj.position.multiplyScalar(scale)
-      }
-    })
-    cloned_armature.scale.set(1, 1, 1)
-    cloned_armature.updateMatrixWorld(true)
 
+    // bake scale into all child bone positions
+    if (scale !== 1) {
+      cloned_armature.traverse((obj) => {
+        if (obj instanceof Object3D && obj !== cloned_armature) {
+          obj.position.multiplyScalar(scale)
+        }
+      })
+      cloned_armature.scale.set(1, 1, 1)
+    }
+
+    cloned_armature.updateMatrixWorld(true)
     return cloned_armature
   }
 
